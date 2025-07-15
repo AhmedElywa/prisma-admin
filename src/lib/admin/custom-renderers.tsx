@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import type { ReactNode } from 'react';
 import type { AdminField } from './types';
 
@@ -219,11 +220,13 @@ export const ImagePreviewRenderer: TableCellRenderer = ({ value }) => {
   return (
     <div className="flex gap-1">
       {images.slice(0, 3).map((img, index) => (
-        <img
-          alt={`Image ${index + 1}`}
-          className="h-10 w-10 rounded border object-cover"
-          key={index}
+        <Image
+          alt={`Preview ${index + 1}`}
+          className="rounded border object-cover"
+          height={40}
+          key={`img-${index}-${img}`}
           src={img}
+          width={40}
         />
       ))}
       {images.length > 3 && (

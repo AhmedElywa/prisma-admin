@@ -138,6 +138,10 @@ export function getFieldValidation(field: AdminField) {
         message: 'Must be a valid number',
       };
       break;
+
+    default:
+      // No specific validation for other types
+      break;
   }
 
   return rules;

@@ -53,8 +53,8 @@ async function analyzeTests() {
     }
 
     if (issues.length > 0) {
-      issues.forEach((_issue) => {});
-    } else {
+      console.log(`\n📄 ${file}`);
+      issues.forEach((issue) => console.log(issue));
     }
   }
 }
@@ -75,7 +75,7 @@ async function testSelectors() {
       { selector: 'main', description: 'Main content area' },
     ];
 
-    for (const { selector, description } of selectors) {
+    for (const { selector } of selectors) {
       const count = await page.locator(selector).count();
 
       if (count > 1 && selector === 'h1') {
@@ -87,7 +87,8 @@ async function testSelectors() {
       const _href = await link.getAttribute('href');
       const _text = await link.textContent();
     }
-  } catch (_error) {
+  } catch (error) {
+    console.error('Error during selector test:', error);
   } finally {
     await browser.close();
   }
@@ -117,5 +118,6 @@ async function findTestFiles(dir: string): Promise<string[]> {
   if (args.includes('--check-selectors')) {
     await testSelectors();
   } else {
+    await analyzeTests();
   }
 })();

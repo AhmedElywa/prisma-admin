@@ -113,7 +113,9 @@ function generateModel(model: DMMF.Model): AdminModel {
   const foreignKeyFields = new Set<string>();
   model.fields.forEach((field) => {
     if (field.relationFromFields && field.relationFromFields.length > 0) {
-      field.relationFromFields.forEach((fk) => foreignKeyFields.add(fk));
+      for (const fk of field.relationFromFields) {
+        foreignKeyFields.add(fk);
+      }
     }
   });
 

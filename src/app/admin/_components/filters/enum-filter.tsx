@@ -66,7 +66,7 @@ export function EnumFilter({ config, value, onChange }: EnumFilterProps) {
 
     return (
       <Select onValueChange={onChange} value={value || ''}>
-        <SelectTrigger>
+        <SelectTrigger className="w-full">
           <SelectValue placeholder="Select value" />
         </SelectTrigger>
         <SelectContent>

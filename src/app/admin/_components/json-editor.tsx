@@ -2,7 +2,7 @@
 
 import Editor from '@monaco-editor/react';
 import { AlertCircle, Check } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -39,7 +39,7 @@ export function JsonEditor({
   const [validJsonValue, setValidJsonValue] = useState(initialJsonString);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const validateJson = (value: string) => {
+  const validateJson = useCallback((value: string) => {
     try {
       JSON.parse(value);
       setError(null);
@@ -49,7 +49,7 @@ export function JsonEditor({
       setError('Invalid JSON format');
       setIsValid(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     // Debounce validation
@@ -66,7 +66,7 @@ export function JsonEditor({
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [jsonString]);
+  }, [jsonString, validateJson]);
 
   const formatJson = () => {
     try {

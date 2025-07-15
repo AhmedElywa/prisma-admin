@@ -29,12 +29,24 @@ import type {
 async function buildSelect(_modelName: string, fields: AdminField[]) {
   const select: SelectInput = {};
 
+  // Get all related models in parallel
+  const objectFields = fields.filter((f) => f.kind === 'object');
+  const relatedModels = await Promise.all(
+    objectFields.map((field) =>
+      getModelSettings(field.type).then((model) => ({ field, model }))
+    )
+  );
+
   for (const field of fields) {
     if (field.kind === 'scalar' || field.kind === 'enum') {
       select[field.name] = true;
     } else if (field.kind === 'object') {
-      // Include display fields for relations
-      const relatedModel = await getModelSettings(field.type);
+      // Find the related model from our preloaded data
+      const relatedData = relatedModels.find(
+        (rm) => rm.field.name === field.name
+      );
+      const relatedModel = relatedData?.model;
+
       if (relatedModel) {
         const relationSelect: SelectInput = {
           [relatedModel.idField]: true,
@@ -293,6 +305,9 @@ export async function createModelRecord(modelName: string, formData: FormData) {
               convertedValue = value;
             }
             break;
+          default:
+            // Keep value as is for String and other types
+            break;
         }
 
         values.push(convertedValue);
@@ -470,6 +485,9 @@ export async function updateModelRecord(
             } catch {
               convertedValue = value;
             }
+            break;
+          default:
+            // Keep value as is for String and other types
             break;
         }
 

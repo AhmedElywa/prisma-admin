@@ -25,6 +25,16 @@ export function RelationDropdown({
   onPreview,
 }: RelationFieldProps) {
   const router = useRouter();
+
+  // Handle invalid configuration - dropdown shouldn't be used for array values
+  if (Array.isArray(value)) {
+    return (
+      <span className="text-muted-foreground">
+        {value.length} {field.title || field.name}
+      </span>
+    );
+  }
+
   const displayValue = getRelationDisplayValue(
     value,
     field.relationEditOptions?.previewFields
@@ -64,20 +74,8 @@ export function RelationDropdown({
   };
 
   const handleViewAll = () => {
-    // Navigate to related model filtered by this relation
-    const filterField = `${modelName.toLowerCase()}Id`;
-    const params = new URLSearchParams();
-    params.set(
-      'filters',
-      JSON.stringify([
-        {
-          field: filterField,
-          operator: 'equals',
-          value: value.id,
-        },
-      ])
-    );
-    router.push(`/admin/${relationModel}?${params.toString()}`);
+    // This should not be shown for many-to-one relations
+    // But if it is, we'll handle it gracefully
   };
 
   return (

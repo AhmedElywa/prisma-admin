@@ -297,7 +297,9 @@ export function CSVImport({
                   </TableHeader>
                   <TableBody>
                     {csvData.map((row, index) => (
-                      <TableRow key={index}>
+                      <TableRow
+                        key={`row-${index}-${Object.values(row).join('-')}`}
+                      >
                         {csvHeaders.map((header) => (
                           <TableCell className="text-sm" key={header}>
                             {row[header]}
@@ -345,7 +347,7 @@ export function CSVImport({
                   <p className="font-medium text-sm">Errors:</p>
                   <ul className="list-inside list-disc text-muted-foreground text-sm">
                     {importResults.errors.slice(0, 5).map((error, i) => (
-                      <li key={i}>{error}</li>
+                      <li key={`error-${i}-${error}`}>{error}</li>
                     ))}
                   </ul>
                   {importResults.errors.length > 5 && (

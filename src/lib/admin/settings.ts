@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { cache } from 'react';
+import { migrateRelationConfigs } from './relation-validation';
 import type { AdminField, AdminModel, AdminSettings } from './types';
 
 const SETTINGS_PATH = path.join(process.cwd(), 'adminSettings.json');
@@ -9,7 +10,9 @@ const SETTINGS_PATH = path.join(process.cwd(), 'adminSettings.json');
 export const getAdminSettings = cache(async (): Promise<AdminSettings> => {
   try {
     const content = await fs.readFile(SETTINGS_PATH, 'utf-8');
-    return JSON.parse(content);
+    const settings = JSON.parse(content);
+    // Apply migration to fix invalid relation configurations
+    return migrateRelationConfigs(settings);
   } catch (_error) {
     // Return empty settings as fallback
     return { models: [], enums: [] };
@@ -107,17 +110,17 @@ export async function getEnumValues(enumName: string): Promise<string[]> {
 // Check model permissions
 export async function canCreateModel(modelName: string): Promise<boolean> {
   const model = await getModelSettings(modelName);
-  return model?.create;
+  return model?.create ?? false;
 }
 
 export async function canUpdateModel(modelName: string): Promise<boolean> {
   const model = await getModelSettings(modelName);
-  return model?.update;
+  return model?.update ?? false;
 }
 
 export async function canDeleteModel(modelName: string): Promise<boolean> {
   const model = await getModelSettings(modelName);
-  return model?.delete;
+  return model?.delete ?? false;
 }
 
 export async function canReadModel(modelName: string): Promise<boolean> {

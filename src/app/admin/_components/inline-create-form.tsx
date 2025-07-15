@@ -28,27 +28,27 @@ export function InlineCreateForm({
   const [fields, setFields] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  const loadFields = async () => {
-    try {
-      setLoading(true);
-      const formFields = await getFormFieldsData(modelName);
-
-      // Filter out parent field
-      const filteredFields = formFields.filter(
-        (field) => field.name !== parentField
-      );
-
-      setFields(filteredFields);
-    } catch (_err) {
-      setError('Failed to load form fields');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    const loadFields = async () => {
+      try {
+        setLoading(true);
+        const formFields = await getFormFieldsData(modelName);
+
+        // Filter out parent field
+        const filteredFields = formFields.filter(
+          (field) => field.name !== parentField
+        );
+
+        setFields(filteredFields);
+      } catch (_err) {
+        setError('Failed to load form fields');
+      } finally {
+        setLoading(false);
+      }
+    };
+
     loadFields();
-  }, []);
+  }, [modelName, parentField]);
 
   async function handleSubmit(formData: FormData) {
     try {

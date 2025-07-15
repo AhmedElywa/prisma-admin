@@ -166,7 +166,10 @@ export function FilterBuilder({ fields, modelName }: FilterBuilderProps) {
           const operators = field ? getOperatorsForType(field.type) : [];
 
           return (
-            <div className="flex gap-2" key={index}>
+            <div
+              className="flex gap-2"
+              key={`filter-${index}-${filter.field}-${filter.operator}`}
+            >
               <Select
                 onValueChange={(value) => updateFilter(index, { field: value })}
                 value={filter.field}

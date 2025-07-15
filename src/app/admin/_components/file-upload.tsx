@@ -1,6 +1,7 @@
 'use client';
 
 import { File, FileText, Image as ImageIcon, Upload, X } from 'lucide-react';
+import Image from 'next/image';
 import { type ChangeEvent, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -90,13 +91,14 @@ export function FileUpload({
         {required && <span className="ml-1 text-red-500">*</span>}
       </Label>
 
-      <div
+      <button
         className={cn(
-          'cursor-pointer rounded-lg border-2 border-dashed p-6 text-center transition-colors',
+          'w-full cursor-pointer rounded-lg border-2 border-dashed p-6 text-center transition-colors',
           'hover:border-primary hover:bg-muted/50',
           selectedFiles.length > 0 && 'border-primary bg-muted/30'
         )}
         onClick={() => fileInputRef.current?.click()}
+        type="button"
       >
         <input
           accept={accept}
@@ -127,16 +129,19 @@ export function FileUpload({
               const preview = previews[index];
 
               return (
-                <div
-                  className="flex items-center gap-2 rounded-md bg-background p-2"
-                  key={index}
+                <button
+                  className="flex w-full items-center gap-2 rounded-md bg-background p-2 text-left"
+                  key={`file-${index}-${file.name}`}
                   onClick={(e) => e.stopPropagation()}
+                  type="button"
                 >
                   {preview ? (
-                    <img
+                    <Image
                       alt={file.name}
-                      className="h-10 w-10 rounded object-cover"
+                      className="rounded object-cover"
+                      height={40}
                       src={preview}
+                      width={40}
                     />
                   ) : (
                     <Icon className="h-10 w-10 text-muted-foreground" />
@@ -156,7 +161,7 @@ export function FileUpload({
                   >
                     <X className="h-4 w-4" />
                   </Button>
-                </div>
+                </button>
               );
             })}
 
@@ -176,7 +181,7 @@ export function FileUpload({
             )}
           </div>
         )}
-      </div>
+      </button>
 
       {value && !selectedFiles.length && (
         <div className="text-muted-foreground text-sm">

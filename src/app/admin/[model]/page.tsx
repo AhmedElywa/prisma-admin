@@ -61,18 +61,47 @@ export default async function ModelListPage({
   // Get filterable fields
   const filterableFields = await getFilterableFields(modelName);
 
-  // Build columns configuration
-  const columns = fields.map((field) => ({
-    key: field.name,
-    label: field.title,
-    type: getColumnType(field),
-    sortable: field.sort,
-    isRelation: field.kind === 'object',
-    relationTo: field.type, // The related model name
-    relationFrom: field.relationFrom, // The foreign key field
-    isList: field.list, // Whether it's a one-to-many relation
-    field, // Pass full field metadata for relations
-  }));
+  // Get admin settings first
+  const settings = await getAdminSettings();
+
+  // Build columns configuration with inverse relation info
+  const columns = await Promise.all(
+    fields.map((field) => {
+      let inverseRelationField: string | undefined;
+
+      // For relation fields, find the inverse field
+      if (field.relationField && field.relationName) {
+        const targetModel = settings.models.find((m) => m.name === field.type);
+        if (targetModel) {
+          const inverseField = targetModel.fields.find(
+            (f) => f.relationName === field.relationName && f.type === modelName
+          );
+
+          if (inverseField) {
+            // For many-to-many relations, use the relation field name
+            // For one-to-many/many-to-one, use the foreign key field
+            inverseRelationField =
+              inverseField.relationFrom || inverseField.name;
+          }
+        }
+      }
+
+      return {
+        key: field.name,
+        label: field.title,
+        type: getColumnType(field),
+        sortable: field.sort,
+        isRelation: field.kind === 'object',
+        relationTo: field.type, // The related model name
+        relationFrom: field.relationFrom, // The foreign key field
+        isList: field.list, // Whether it's a one-to-many relation
+        field: {
+          ...field,
+          inverseRelationField, // Add the inverse field name
+        }, // Pass full field metadata for relations
+      };
+    })
+  );
 
   // Parse filters from URL
   const filters: FilterValue[] = search.filters
@@ -80,14 +109,13 @@ export default async function ModelListPage({
     : [];
 
   // Build filter configs
-  const settings = await getAdminSettings();
   const filterConfigs: FilterConfig[] = filterableFields.map((field) => ({
     field: field.name,
     label: field.title,
     type: field.type,
     kind: field.kind,
     list: field.list,
-    relationTo: field.relationFrom,
+    relationTo: field.kind === 'object' ? field.type : field.relationFrom,
     enumValues:
       field.kind === 'enum'
         ? settings.enums.find((e) => e.name === field.type)?.fields

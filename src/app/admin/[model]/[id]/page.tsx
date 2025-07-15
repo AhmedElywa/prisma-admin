@@ -108,7 +108,7 @@ export default async function EditModelPage({
       .filter(
         (field) => field.relationField && field.list && field.kind === 'object'
       )
-      .map(async (field) => {
+      .map((field) => {
         // Find the related model settings
         const relatedModel = settings.models.find((m) => m.id === field.type);
         if (!relatedModel) {
@@ -123,13 +123,13 @@ export default async function EditModelPage({
             f.relationFrom
         );
 
-        if (!backRefField) {
+        if (!backRefField?.relationFrom) {
           return null;
         }
 
         return {
           model: field.type,
-          field: backRefField.relationFrom!, // This is the foreign key field name
+          field: backRefField.relationFrom, // This is the foreign key field name
           label: field.title,
           type: 'one-to-many' as const,
         };

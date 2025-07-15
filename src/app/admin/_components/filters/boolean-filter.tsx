@@ -27,7 +27,7 @@ export function BooleanFilter({ config, value, onChange }: BooleanFilterProps) {
         onValueChange={(val) => onChange(val === 'true')}
         value={value?.toString() || ''}
       >
-        <SelectTrigger>
+        <SelectTrigger className="w-full">
           <SelectValue placeholder="Select value" />
         </SelectTrigger>
         <SelectContent>

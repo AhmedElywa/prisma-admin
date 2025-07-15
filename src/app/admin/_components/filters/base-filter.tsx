@@ -65,17 +65,16 @@ export function BaseFilter({
     } else if (
       filterValue !== '' &&
       filterValue !== null &&
-      filterValue !== undefined
+      filterValue !== undefined &&
+      (!Array.isArray(filterValue) || filterValue.length > 0)
     ) {
       // If we have a value, update with new operator
-      if (!Array.isArray(filterValue) || filterValue.length > 0) {
-        onChange({
-          field: config.field,
-          operator: newOperator,
-          value: filterValue,
-          type: config.type,
-        });
-      }
+      onChange({
+        field: config.field,
+        operator: newOperator,
+        value: filterValue,
+        type: config.type,
+      });
     }
   };
 

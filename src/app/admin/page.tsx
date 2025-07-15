@@ -15,8 +15,10 @@ import { prisma } from '@/lib/prisma';
 const iconMap: Record<string, any> = {
   User: () => (
     <svg
+      aria-label="User icon"
       className="h-6 w-6"
       fill="none"
+      role="img"
       stroke="currentColor"
       viewBox="0 0 24 24"
     >
@@ -30,8 +32,10 @@ const iconMap: Record<string, any> = {
   ),
   Post: () => (
     <svg
+      aria-label="Post icon"
       className="h-6 w-6"
       fill="none"
+      role="img"
       stroke="currentColor"
       viewBox="0 0 24 24"
     >
@@ -45,8 +49,10 @@ const iconMap: Record<string, any> = {
   ),
   Category: () => (
     <svg
+      aria-label="Category icon"
       className="h-6 w-6"
       fill="none"
+      role="img"
       stroke="currentColor"
       viewBox="0 0 24 24"
     >
@@ -60,8 +66,10 @@ const iconMap: Record<string, any> = {
   ),
   Tag: () => (
     <svg
+      aria-label="Tag icon"
       className="h-6 w-6"
       fill="none"
+      role="img"
       stroke="currentColor"
       viewBox="0 0 24 24"
     >
@@ -75,8 +83,10 @@ const iconMap: Record<string, any> = {
   ),
   Profile: () => (
     <svg
+      aria-label="Profile icon"
       className="h-6 w-6"
       fill="none"
+      role="img"
       stroke="currentColor"
       viewBox="0 0 24 24"
     >

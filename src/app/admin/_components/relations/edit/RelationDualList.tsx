@@ -7,7 +7,7 @@ import {
   ChevronsRight,
   Search,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -54,12 +54,7 @@ export function RelationDualList({
   ];
   const pageSize = field.relationEditOptions?.pageSize || 100;
 
-  // Initialize data
-  useEffect(() => {
-    loadAllData();
-  }, [loadAllData]);
-
-  async function loadAllData() {
+  const loadAllData = useCallback(async () => {
     setLoading(true);
     try {
       // Load all available options
@@ -99,7 +94,12 @@ export function RelationDualList({
     } finally {
       setLoading(false);
     }
-  }
+  }, [relatedModel, pageSize, value]);
+
+  // Initialize data
+  useEffect(() => {
+    loadAllData();
+  }, [loadAllData]);
 
   function getDisplayValue(record: any): string {
     if (!record) {
@@ -215,16 +215,17 @@ export function RelationDualList({
               const isHighlighted = availableHighlight.has(id);
 
               return (
-                <div
+                <button
                   className={cn(
-                    'cursor-pointer px-3 py-2 hover:bg-muted/50',
+                    'w-full cursor-pointer px-3 py-2 text-left hover:bg-muted/50',
                     isHighlighted && 'bg-muted'
                   )}
                   key={id}
                   onClick={() => toggleHighlight(id, 'available')}
+                  type="button"
                 >
                   {getDisplayValue(item)}
-                </div>
+                </button>
               );
             })}
           </div>
@@ -302,16 +303,17 @@ export function RelationDualList({
               const isHighlighted = selectedHighlight.has(id);
 
               return (
-                <div
+                <button
                   className={cn(
-                    'cursor-pointer px-3 py-2 hover:bg-muted/50',
+                    'w-full cursor-pointer px-3 py-2 text-left hover:bg-muted/50',
                     isHighlighted && 'bg-muted'
                   )}
                   key={id}
                   onClick={() => toggleHighlight(id, 'selected')}
+                  type="button"
                 >
                   {getDisplayValue(item)}
-                </div>
+                </button>
               );
             })}
           </div>

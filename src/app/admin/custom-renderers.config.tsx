@@ -43,7 +43,10 @@ export function initializeCustomRenderers() {
   registerFieldRenderer('User.email', (props) => {
     return (
       <div className="space-y-2">
-        <label className="font-medium text-sm">
+        <label
+          className="font-medium text-sm"
+          htmlFor={`${props.field.name}-input`}
+        >
           {props.field.title}
           {props.required && <span className="ml-1 text-red-500">*</span>}
         </label>
@@ -52,6 +55,7 @@ export function initializeCustomRenderers() {
             className="flex-1 rounded-md border px-3 py-2"
             defaultValue={props.value}
             disabled={props.disabled}
+            id={`${props.field.name}-input`}
             name={props.field.name}
             placeholder="user@example.com"
             required={props.required}

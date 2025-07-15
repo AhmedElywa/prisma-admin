@@ -1,20 +1,34 @@
 'use client';
 
-import { ChevronDown, ChevronRight, GripVertical } from 'lucide-react';
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import {
+  closestCenter,
+  DndContext,
+  type DragEndEvent,
+  DragOverlay,
+  type DragStartEvent,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  restrictToVerticalAxis,
+  restrictToWindowEdges,
+} from '@dnd-kit/modifiers';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { GripVertical } from 'lucide-react';
+import { useState } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { Label } from '@/components/ui/label';
 import type { AdminField, AdminModel } from '@/lib/admin/types';
 import { RelationFieldSettings } from './relation-field-settings';
+import { SortableFieldItem } from './sortable-field-item';
 
 interface FieldConfigProps {
   model: AdminModel;
@@ -27,340 +41,238 @@ export function FieldConfig({
   onUpdateField,
   onReorderFields,
 }: FieldConfigProps) {
-  const [expandedFields, setExpandedFields] = useState<Set<string>>(new Set());
-  const [draggedField, setDraggedField] = useState<string | null>(null);
-  const [dragOverField, setDragOverField] = useState<string | null>(null);
-  const [dragOverPosition, setDragOverPosition] = useState<
-    'top' | 'bottom' | null
-  >(null);
+  const [selectedFieldId, setSelectedFieldId] = useState<string | null>(
+    model.fields[0]?.id || null
+  );
+  const [activeId, setActiveId] = useState<string | null>(null);
 
-  const toggleFieldExpanded = (fieldId: string) => {
-    const newExpanded = new Set(expandedFields);
-    if (newExpanded.has(fieldId)) {
-      newExpanded.delete(fieldId);
-    } else {
-      newExpanded.add(fieldId);
-    }
-    setExpandedFields(newExpanded);
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const selectedField = model.fields.find((f) => f.id === selectedFieldId);
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
   };
 
-  const handleDragStart = (e: React.DragEvent, fieldId: string) => {
-    setDraggedField(fieldId);
-    e.dataTransfer.effectAllowed = 'move';
-    // Add dragging class to body to change cursor globally
-    document.body.classList.add('dragging');
-  };
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
 
-  const handleDragOver = (e: React.DragEvent, fieldId: string) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
+    if (over && active.id !== over.id) {
+      const oldIndex = model.fields.findIndex((f) => f.id === active.id);
+      const newIndex = model.fields.findIndex((f) => f.id === over.id);
 
-    if (draggedField === fieldId) {
-      return;
+      const reorderedFields = arrayMove(model.fields, oldIndex, newIndex).map(
+        (field, idx) => ({
+          ...field,
+          order: idx,
+        })
+      );
+
+      onReorderFields(reorderedFields);
     }
 
-    // Calculate if we're in the top or bottom half of the row
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    const y = e.clientY - rect.top;
-    const position = y < rect.height / 2 ? 'top' : 'bottom';
-
-    setDragOverField(fieldId);
-    setDragOverPosition(position);
+    setActiveId(null);
   };
 
-  const handleDragLeave = (e: React.DragEvent) => {
-    // Only clear if we're leaving the table entirely
-    if (!(e.relatedTarget && (e.relatedTarget as HTMLElement).closest('tr'))) {
-      setDragOverField(null);
-      setDragOverPosition(null);
-    }
-  };
-
-  const handleDrop = (e: React.DragEvent, targetFieldId: string) => {
-    e.preventDefault();
-
-    if (!draggedField || draggedField === targetFieldId) {
-      setDraggedField(null);
-      setDragOverField(null);
-      setDragOverPosition(null);
-      return;
-    }
-
-    const fields = [...model.fields];
-    const draggedIndex = fields.findIndex((f) => f.id === draggedField);
-    const targetIndex = fields.findIndex((f) => f.id === targetFieldId);
-
-    if (draggedIndex === -1 || targetIndex === -1) {
-      setDraggedField(null);
-      setDragOverField(null);
-      setDragOverPosition(null);
-      return;
-    }
-
-    // Remove dragged field
-    const [draggedFieldObj] = fields.splice(draggedIndex, 1);
-
-    // Calculate new position based on drag position
-    let newIndex = targetIndex;
-    if (dragOverPosition === 'bottom') {
-      newIndex = draggedIndex < targetIndex ? targetIndex : targetIndex + 1;
-    } else {
-      newIndex = draggedIndex < targetIndex ? targetIndex - 1 : targetIndex;
-    }
-
-    // Insert at new position
-    fields.splice(newIndex, 0, draggedFieldObj);
-
-    // Update order property for all fields
-    const reorderedFields = fields.map((field, idx) => ({
-      ...field,
-      order: idx,
-    }));
-
-    onReorderFields(reorderedFields);
-    setDraggedField(null);
-    setDragOverField(null);
-    setDragOverPosition(null);
-  };
-
-  const handleDragEnd = () => {
-    setDraggedField(null);
-    setDragOverField(null);
-    setDragOverPosition(null);
-    // Remove dragging class from body
-    document.body.classList.remove('dragging');
-  };
+  const activeField = activeId
+    ? model.fields.find((f) => f.id === activeId)
+    : null;
 
   return (
-    <div className="overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-[40px]" />
-            <TableHead className="min-w-[150px]">Field</TableHead>
-            <TableHead className="min-w-[150px]">Display Name</TableHead>
-            <TableHead className="w-[70px] text-center">Read</TableHead>
-            <TableHead className="w-[70px] text-center">Create</TableHead>
-            <TableHead className="w-[70px] text-center">Update</TableHead>
-            <TableHead className="w-[70px] text-center">Filter</TableHead>
-            <TableHead className="w-[70px] text-center">Sort</TableHead>
-            <TableHead className="w-[50px]" />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {model.fields.map((field, index) => (
-            <React.Fragment key={`field-${field.id}-${index}`}>
-              <TableRow
-                className={`relative transition-all ${draggedField === field.id ? 'opacity-20' : ''} 
-                  ${expandedFields.has(field.id) ? 'border-b-0' : ''} ${draggedField && draggedField !== field.id ? 'cursor-move' : ''} `}
-                draggable
-                onDragEnd={handleDragEnd}
-                onDragLeave={handleDragLeave}
-                onDragOver={(e) => handleDragOver(e, field.id)}
-                onDragStart={(e) => handleDragStart(e, field.id)}
-                onDrop={(e) => handleDrop(e, field.id)}
-                style={{
-                  borderTop:
-                    dragOverField === field.id && dragOverPosition === 'top'
-                      ? '2px solid hsl(var(--primary))'
-                      : undefined,
-                  borderBottom:
-                    dragOverField === field.id && dragOverPosition === 'bottom'
-                      ? '2px solid hsl(var(--primary))'
-                      : undefined,
-                }}
-              >
-                <TableCell className="py-2">
-                  <Button
-                    className="h-8 w-8 cursor-move hover:bg-muted"
-                    onMouseDown={(e) =>
-                      (e.currentTarget.style.cursor = 'grabbing')
-                    }
-                    onMouseUp={(e) => (e.currentTarget.style.cursor = 'move')}
-                    size="icon"
-                    variant="ghost"
-                  >
-                    <GripVertical className="h-4 w-4" />
-                  </Button>
-                </TableCell>
-                <TableCell className="py-2 font-medium">
-                  <div>
-                    <div className="flex items-center gap-1">
-                      {field.name}
-                      {field.required && (
-                        <span className="text-red-500">*</span>
-                      )}
+    <div className="flex h-[600px] divide-x">
+      {/* Left Panel - Field List */}
+      <div className="w-80 flex-shrink-0 overflow-y-auto">
+        <DndContext
+          collisionDetection={closestCenter}
+          modifiers={[restrictToVerticalAxis, restrictToWindowEdges]}
+          onDragEnd={handleDragEnd}
+          onDragStart={handleDragStart}
+          sensors={sensors}
+        >
+          <SortableContext
+            items={model.fields.map((f) => f.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <div className="space-y-1 p-4">
+              {model.fields.map((field) => (
+                <SortableFieldItem
+                  field={field}
+                  isSelected={selectedFieldId === field.id}
+                  key={field.id}
+                  onClick={() => setSelectedFieldId(field.id)}
+                />
+              ))}
+            </div>
+          </SortableContext>
+          <DragOverlay>
+            {activeField ? (
+              <div className="cursor-move rounded-md border bg-background p-3 shadow-lg">
+                <div className="flex items-center gap-2">
+                  <GripVertical className="h-4 w-4 text-muted-foreground" />
+                  <div className="flex-1">
+                    <div className="font-medium text-sm">
+                      {activeField.name}
                     </div>
                     <div className="text-muted-foreground text-xs">
-                      {field.type}
-                      {field.list && '[]'}
-                      {field.relationField ? (
-                        <>
-                          {' • '}
-                          {field.list ? 'one-to-many' : 'many-to-one'} →{' '}
-                          {field.type}
-                        </>
-                      ) : (
-                        <>
-                          {' • '}
-                          {field.kind} field
-                          {field.unique && ', unique'}
-                          {field.isId && ', primary key'}
-                        </>
-                      )}
+                      {activeField.type}
+                      {activeField.list && '[]'}
                     </div>
                   </div>
-                </TableCell>
-                <TableCell className="py-2">
-                  <Input
-                    className="h-8 w-full"
-                    onChange={(e) =>
-                      onUpdateField(field.id, { title: e.target.value })
-                    }
-                    value={field.title}
-                  />
-                </TableCell>
-                <TableCell className="py-2 text-center">
+                </div>
+              </div>
+            ) : null}
+          </DragOverlay>
+        </DndContext>
+      </div>
+
+      {/* Right Panel - Field Details */}
+      <div className="flex-1 overflow-y-auto">
+        {selectedField ? (
+          <div className="space-y-6 p-6">
+            {/* Display Name */}
+            <div className="space-y-2">
+              <Label htmlFor="display-name">Display Name</Label>
+              <Input
+                id="display-name"
+                onChange={(e) =>
+                  onUpdateField(selectedField.id, { title: e.target.value })
+                }
+                placeholder="Enter display name"
+                value={selectedField.title}
+              />
+            </div>
+
+            {/* Permissions */}
+            <div className="space-y-2">
+              <Label>Permissions</Label>
+              <div className="flex flex-wrap gap-4 rounded-md border px-3 py-2">
+                <label className="flex items-center space-x-2">
                   <Checkbox
-                    checked={field.read}
+                    checked={selectedField.read}
                     onCheckedChange={(checked) =>
-                      onUpdateField(field.id, { read: !!checked })
+                      onUpdateField(selectedField.id, { read: !!checked })
                     }
                   />
-                </TableCell>
-                <TableCell className="py-2 text-center">
+                  <span className="text-sm">Read</span>
+                </label>
+                <label className="flex items-center space-x-2">
                   <Checkbox
-                    checked={field.create}
-                    disabled={field.isId || field.relationField}
+                    checked={selectedField.create}
+                    disabled={selectedField.isId || selectedField.relationField}
                     onCheckedChange={(checked) =>
-                      onUpdateField(field.id, { create: !!checked })
+                      onUpdateField(selectedField.id, { create: !!checked })
                     }
                   />
-                </TableCell>
-                <TableCell className="py-2 text-center">
+                  <span className="text-sm">Create</span>
+                </label>
+                <label className="flex items-center space-x-2">
                   <Checkbox
-                    checked={field.update}
-                    disabled={field.isId || field.relationField}
+                    checked={selectedField.update}
+                    disabled={selectedField.isId || selectedField.relationField}
                     onCheckedChange={(checked) =>
-                      onUpdateField(field.id, { update: !!checked })
+                      onUpdateField(selectedField.id, { update: !!checked })
                     }
                   />
-                </TableCell>
-                <TableCell className="py-2 text-center">
+                  <span className="text-sm">Update</span>
+                </label>
+                <label className="flex items-center space-x-2">
                   <Checkbox
-                    checked={field.filter}
+                    checked={selectedField.filter}
                     onCheckedChange={(checked) =>
-                      onUpdateField(field.id, { filter: !!checked })
+                      onUpdateField(selectedField.id, { filter: !!checked })
                     }
                   />
-                </TableCell>
-                <TableCell className="py-2 text-center">
+                  <span className="text-sm">Filter</span>
+                </label>
+                <label className="flex items-center space-x-2">
                   <Checkbox
-                    checked={field.sort}
-                    disabled={field.list || field.relationField}
+                    checked={selectedField.sort}
+                    disabled={selectedField.list || selectedField.relationField}
                     onCheckedChange={(checked) =>
-                      onUpdateField(field.id, { sort: !!checked })
+                      onUpdateField(selectedField.id, { sort: !!checked })
                     }
                   />
-                </TableCell>
-                <TableCell className="py-2">
-                  <Button
-                    className="h-8 w-8"
-                    onClick={() => toggleFieldExpanded(field.id)}
-                    size="icon"
-                    variant="ghost"
-                  >
-                    {expandedFields.has(field.id) ? (
-                      <ChevronDown className="h-4 w-4" />
-                    ) : (
-                      <ChevronRight className="h-4 w-4" />
-                    )}
-                  </Button>
-                </TableCell>
-              </TableRow>
-              {expandedFields.has(field.id) && (
-                <TableRow className="bg-muted/50">
-                  <TableCell className="p-0" colSpan={1}>
-                    {/* Empty cells for alignment */}
-                  </TableCell>
-                  <TableCell className="p-0" colSpan={7}>
-                    <div className="space-y-3 border-t px-2 py-4">
-                      {field.relationField ? (
-                        <RelationFieldSettings
-                          field={field}
-                          onUpdateField={(updates) =>
-                            onUpdateField(field.id, updates)
-                          }
-                        />
-                      ) : field.type === 'String' ? (
-                        <div className="space-y-2">
-                          <p className="mb-3 font-medium text-sm">
-                            Field Input Type
-                          </p>
-                          <div className="space-y-2">
-                            <label className="flex cursor-pointer items-center space-x-2">
-                              <input
-                                checked={!(field.editor || field.upload)}
-                                className="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
-                                name={`field-type-${field.id}`}
-                                onChange={() =>
-                                  onUpdateField(field.id, {
-                                    editor: false,
-                                    upload: false,
-                                  })
-                                }
-                                type="radio"
-                              />
-                              <span className="text-sm">
-                                Standard Text Input
-                              </span>
-                            </label>
-                            <label className="flex cursor-pointer items-center space-x-2">
-                              <input
-                                checked={field.editor === true}
-                                className="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
-                                name={`field-type-${field.id}`}
-                                onChange={() =>
-                                  onUpdateField(field.id, {
-                                    editor: true,
-                                    upload: false,
-                                  })
-                                }
-                                type="radio"
-                              />
-                              <span className="text-sm">Rich Text Editor</span>
-                            </label>
-                            <label className="flex cursor-pointer items-center space-x-2">
-                              <input
-                                checked={field.upload === true}
-                                className="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
-                                name={`field-type-${field.id}`}
-                                onChange={() =>
-                                  onUpdateField(field.id, {
-                                    upload: true,
-                                    editor: false,
-                                  })
-                                }
-                                type="radio"
-                              />
-                              <span className="text-sm">File Upload</span>
-                            </label>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="text-muted-foreground text-sm">
-                          No additional options available for {field.type}{' '}
-                          fields.
-                        </div>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              )}
-            </React.Fragment>
-          ))}
-        </TableBody>
-      </Table>
+                  <span className="text-sm">Sort</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Field-specific Options */}
+            {selectedField.relationField ? (
+              <RelationFieldSettings
+                field={selectedField}
+                onUpdateField={(updates) =>
+                  onUpdateField(selectedField.id, updates)
+                }
+              />
+            ) : selectedField.type === 'String' ? (
+              <div className="space-y-3">
+                <h3 className="font-medium">Field Input Type</h3>
+                <div className="space-y-2">
+                  <label className="flex cursor-pointer items-center space-x-2">
+                    <input
+                      checked={!(selectedField.editor || selectedField.upload)}
+                      className="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
+                      name={`field-type-${selectedField.id}`}
+                      onChange={() =>
+                        onUpdateField(selectedField.id, {
+                          editor: false,
+                          upload: false,
+                        })
+                      }
+                      type="radio"
+                    />
+                    <span className="text-sm">Standard Text Input</span>
+                  </label>
+                  <label className="flex cursor-pointer items-center space-x-2">
+                    <input
+                      checked={selectedField.editor === true}
+                      className="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
+                      name={`field-type-${selectedField.id}`}
+                      onChange={() =>
+                        onUpdateField(selectedField.id, {
+                          editor: true,
+                          upload: false,
+                        })
+                      }
+                      type="radio"
+                    />
+                    <span className="text-sm">Rich Text Editor</span>
+                  </label>
+                  <label className="flex cursor-pointer items-center space-x-2">
+                    <input
+                      checked={selectedField.upload === true}
+                      className="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
+                      name={`field-type-${selectedField.id}`}
+                      onChange={() =>
+                        onUpdateField(selectedField.id, {
+                          upload: true,
+                          editor: false,
+                        })
+                      }
+                      type="radio"
+                    />
+                    <span className="text-sm">File Upload</span>
+                  </label>
+                </div>
+              </div>
+            ) : (
+              <div className="text-muted-foreground text-sm">
+                No additional options available for {selectedField.type} fields.
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="flex h-full items-center justify-center text-muted-foreground">
+            Select a field to view details
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { Loader2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import type { AdminField } from '@/lib/admin/types';
@@ -50,12 +50,7 @@ export function RelationCheckbox({
     }
   }, [value]);
 
-  // Load all options on mount
-  useEffect(() => {
-    loadOptions();
-  }, [loadOptions]);
-
-  async function loadOptions() {
+  const loadOptions = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -73,7 +68,12 @@ export function RelationCheckbox({
     } finally {
       setLoading(false);
     }
-  }
+  }, [relatedModel, pageSize]);
+
+  // Load all options on mount
+  useEffect(() => {
+    loadOptions();
+  }, [loadOptions]);
 
   function getDisplayValue(record: any): string {
     if (!record) {

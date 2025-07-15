@@ -5,8 +5,14 @@ import { AdminLayout } from '../pages/admin-layout';
 test.describe('Admin Smoke Tests (Debug Version)', () => {
   test.beforeEach(async ({ page }) => {
     // Enable console logging
-    page.on('console', (_msg) => {});
-    page.on('pageerror', (_err) => {});
+    page.on('console', (msg) => {
+      // Log console messages for debugging
+      console.log(`Browser console: ${msg.type()} - ${msg.text()}`);
+    });
+    page.on('pageerror', (err) => {
+      // Log page errors for debugging
+      console.error(`Page error: ${err.message}`);
+    });
   });
 
   test('should load admin dashboard', async ({ page }) => {

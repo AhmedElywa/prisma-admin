@@ -40,7 +40,6 @@ export function ModelSelector({
         <Button
           aria-expanded={open}
           className="w-full justify-between"
-          role="combobox"
           variant="outline"
         >
           <div className="flex items-center">
