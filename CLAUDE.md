@@ -129,6 +129,27 @@ The filter system supports all Prisma operators with type-safe components:
 - Follow the existing filter component patterns for new filter types
 - Maintain type safety throughout the codebase
 
+## TypeScript Guidelines
+
+- **NEVER use `any` type**: Always use proper types, unknown, or specific type assertions
+- If encountering type errors, fix them properly instead of using `any` as a workaround
+- Use type inference where possible, explicit types where necessary
+- Leverage Prisma's generated types for database entities
+
+## Code Quality & Biome Rules
+
+- **Always respect Biome rules**: Run `bun run lint` before committing
+- Fix all linting issues - never bypass or ignore them
+- Use `bun run check` to fix both formatting and linting issues
+- Ensure code passes `bun run check:ci` before creating PRs
+
+## Git Workflow
+
+- **NEVER push directly to the main branch**
+- Always create a new feature branch for changes
+- Submit changes via Pull Request (PR) for review
+- Branch naming convention: `feature/description` or `fix/description`
+
 ## Bun Usage Guidelines
 
 This project uses Bun as the JavaScript runtime and package manager. Follow these conventions:

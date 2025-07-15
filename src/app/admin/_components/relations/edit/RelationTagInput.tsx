@@ -1,7 +1,7 @@
 'use client';
 
 import { Plus, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -64,14 +64,7 @@ export function RelationTagInput({
     }
   }, [value]);
 
-  // Load options when dropdown opens or search changes
-  useEffect(() => {
-    if (open) {
-      loadOptions();
-    }
-  }, [open, loadOptions]);
-
-  async function loadOptions() {
+  const loadOptions = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -93,7 +86,14 @@ export function RelationTagInput({
     } finally {
       setLoading(false);
     }
-  }
+  }, [relatedModel, pageSize, search, searchable]);
+
+  // Load options when dropdown opens or search changes
+  useEffect(() => {
+    if (open) {
+      loadOptions();
+    }
+  }, [open, loadOptions]);
 
   function getDisplayValue(record: any): string {
     if (!record) {

@@ -29,6 +29,7 @@ export interface AdminField {
   relationFrom?: string; // Related model
   relationTo?: string; // Related field
   relationName?: string; // Relation name
+  inverseRelationField?: string; // Inverse field name in target model (runtime only)
   // Table display
   read: boolean; // Show in views
   filter: boolean; // Allow filtering

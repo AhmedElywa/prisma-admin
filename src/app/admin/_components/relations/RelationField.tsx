@@ -12,6 +12,7 @@ export interface RelationFieldProps {
   field: AdminField;
   value: any;
   modelName: string;
+  rowId?: string | number;
   onFilter?: (field: string, value: any) => void;
   onNavigate?: (model: string, id: string | number) => void;
   onPreview?: (model: string, id: string | number) => void;
@@ -21,6 +22,7 @@ export function RelationField({
   field,
   value,
   modelName,
+  rowId,
   onFilter,
   onNavigate,
   onPreview,
@@ -38,6 +40,7 @@ export function RelationField({
     field,
     value,
     modelName,
+    rowId,
     onFilter,
     onNavigate,
     onPreview,

@@ -72,6 +72,61 @@ interface FormFieldProps {
   inModal?: boolean; // If rendered inside a modal
 }
 
+// Common field wrapper component
+const FieldWrapper = ({
+  children,
+  name,
+  label,
+  required,
+}: {
+  children: React.ReactNode;
+  name: string;
+  label: string;
+  required?: boolean;
+}) => (
+  <div className="space-y-2">
+    <Label htmlFor={name}>
+      {label}
+      {required && <span className="ml-1 text-red-500">*</span>}
+    </Label>
+    {children}
+  </div>
+);
+
+// Input field component
+const InputField = ({
+  type,
+  name,
+  label,
+  defaultValue,
+  disabled,
+  placeholder,
+  required,
+  step,
+}: {
+  type: string;
+  name: string;
+  label: string;
+  defaultValue?: any;
+  disabled?: boolean;
+  placeholder?: string;
+  required?: boolean;
+  step?: string;
+}) => (
+  <FieldWrapper label={label} name={name} required={required}>
+    <Input
+      defaultValue={defaultValue}
+      disabled={disabled}
+      id={name}
+      name={name}
+      placeholder={placeholder}
+      required={required}
+      step={step}
+      type={type}
+    />
+  </FieldWrapper>
+);
+
 export function FormField({
   name,
   label,
@@ -162,11 +217,7 @@ export function FormField({
 
     case 'datetime':
       return (
-        <div className="space-y-2">
-          <Label htmlFor={name}>
-            {label}
-            {required && <span className="ml-1 text-red-500">*</span>}
-          </Label>
+        <FieldWrapper label={label} name={name} required={required}>
           <Input
             defaultValue={
               defaultValue
@@ -179,23 +230,19 @@ export function FormField({
             required={required}
             type="datetime-local"
           />
-        </div>
+        </FieldWrapper>
       );
 
     case 'richtext':
       return (
-        <div className="space-y-2">
-          <Label htmlFor={name}>
-            {label}
-            {required && <span className="ml-1 text-red-500">*</span>}
-          </Label>
+        <FieldWrapper label={label} name={name} required={required}>
           <RichTextEditor
             minHeight={inModal ? '300px' : '200px'}
             name={name}
             placeholder={placeholder}
             value={defaultValue}
           />
-        </div>
+        </FieldWrapper>
       );
 
     case 'file':
@@ -214,11 +261,7 @@ export function FormField({
     case 'textarea':
     case 'editor':
       return (
-        <div className="space-y-2">
-          <Label htmlFor={name}>
-            {label}
-            {required && <span className="ml-1 text-red-500">*</span>}
-          </Label>
+        <FieldWrapper label={label} name={name} required={required}>
           <Textarea
             defaultValue={defaultValue}
             disabled={disabled}
@@ -236,105 +279,75 @@ export function FormField({
                   : 4
             }
           />
-        </div>
+        </FieldWrapper>
       );
 
     case 'number':
       return (
-        <div className="space-y-2">
-          <Label htmlFor={name}>
-            {label}
-            {required && <span className="ml-1 text-red-500">*</span>}
-          </Label>
-          <Input
-            defaultValue={defaultValue}
-            disabled={disabled}
-            id={name}
-            name={name}
-            placeholder={placeholder}
-            required={required}
-            step="any"
-            type="number"
-          />
-        </div>
+        <InputField
+          defaultValue={defaultValue}
+          disabled={disabled}
+          label={label}
+          name={name}
+          placeholder={placeholder}
+          required={required}
+          step="any"
+          type="number"
+        />
       );
 
     case 'email':
       return (
-        <div className="space-y-2">
-          <Label htmlFor={name}>
-            {label}
-            {required && <span className="ml-1 text-red-500">*</span>}
-          </Label>
-          <Input
-            defaultValue={defaultValue}
-            disabled={disabled}
-            id={name}
-            name={name}
-            placeholder={placeholder || 'email@example.com'}
-            required={required}
-            type="email"
-          />
-        </div>
+        <InputField
+          defaultValue={defaultValue}
+          disabled={disabled}
+          label={label}
+          name={name}
+          placeholder={placeholder || 'email@example.com'}
+          required={required}
+          type="email"
+        />
       );
 
     case 'password':
       return (
-        <div className="space-y-2">
-          <Label htmlFor={name}>
-            {label}
-            {required && <span className="ml-1 text-red-500">*</span>}
-          </Label>
-          <Input
-            defaultValue={defaultValue}
-            disabled={disabled}
-            id={name}
-            name={name}
-            placeholder={placeholder || '••••••••'}
-            required={required}
-            type="password"
-          />
-        </div>
+        <InputField
+          defaultValue={defaultValue}
+          disabled={disabled}
+          label={label}
+          name={name}
+          placeholder={placeholder || '••••••••'}
+          required={required}
+          type="password"
+        />
       );
 
     case 'url':
       return (
-        <div className="space-y-2">
-          <Label htmlFor={name}>
-            {label}
-            {required && <span className="ml-1 text-red-500">*</span>}
-          </Label>
-          <Input
-            defaultValue={defaultValue}
-            disabled={disabled}
-            id={name}
-            name={name}
-            placeholder={placeholder || 'https://example.com'}
-            required={required}
-            type="url"
-          />
-        </div>
+        <InputField
+          defaultValue={defaultValue}
+          disabled={disabled}
+          label={label}
+          name={name}
+          placeholder={placeholder || 'https://example.com'}
+          required={required}
+          type="url"
+        />
       );
 
     case 'relation':
       if (!(relatedModel && field)) {
         // Fallback to text input if no related model or field metadata specified
         return (
-          <div className="space-y-2">
-            <Label htmlFor={name}>
-              {label}
-              {required && <span className="ml-1 text-red-500">*</span>}
-            </Label>
-            <Input
-              defaultValue={defaultValue}
-              disabled={disabled}
-              id={name}
-              name={name}
-              placeholder={placeholder || `Enter ${label} ID`}
-              required={required}
-              type="text"
-            />
-          </div>
+          <InputField
+            defaultValue={defaultValue}
+            disabled={disabled}
+            label={label}
+            name={name}
+            placeholder={placeholder || `Enter ${label} ID`}
+            required={required}
+            type="text"
+          />
         );
       }
 
@@ -373,21 +386,15 @@ export function FormField({
       );
     default:
       return (
-        <div className="space-y-2">
-          <Label htmlFor={name}>
-            {label}
-            {required && <span className="ml-1 text-red-500">*</span>}
-          </Label>
-          <Input
-            defaultValue={defaultValue}
-            disabled={disabled}
-            id={name}
-            name={name}
-            placeholder={placeholder}
-            required={required}
-            type="text"
-          />
-        </div>
+        <InputField
+          defaultValue={defaultValue}
+          disabled={disabled}
+          label={label}
+          name={name}
+          placeholder={placeholder}
+          required={required}
+          type="text"
+        />
       );
   }
 }

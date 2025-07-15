@@ -11,7 +11,7 @@ export function buildPrismaWhere(
   const where: WhereInput = {};
 
   for (const filter of filters) {
-    const { field, operator, value, type, mode } = filter;
+    const { field, operator, value, type } = filter;
 
     // Handle null/not null operators
     if (operator === 'isNull') {
@@ -72,35 +72,35 @@ export function buildPrismaWhere(
       case 'contains':
         where[field] = {
           contains: value,
-          ...(mode && { mode }),
+          mode: 'insensitive',
         };
         break;
 
       case 'startsWith':
         where[field] = {
           startsWith: value,
-          ...(mode && { mode }),
+          mode: 'insensitive',
         };
         break;
 
       case 'endsWith':
         where[field] = {
           endsWith: value,
-          ...(mode && { mode }),
+          mode: 'insensitive',
         };
         break;
 
       // JSON specific operators
       case 'string_contains':
-        where[field] = { string_contains: value, ...(mode && { mode }) };
+        where[field] = { string_contains: value, mode: 'insensitive' };
         break;
 
       case 'string_starts_with':
-        where[field] = { string_starts_with: value, ...(mode && { mode }) };
+        where[field] = { string_starts_with: value, mode: 'insensitive' };
         break;
 
       case 'string_ends_with':
-        where[field] = { string_ends_with: value, ...(mode && { mode }) };
+        where[field] = { string_ends_with: value, mode: 'insensitive' };
         break;
 
       case 'array_contains':

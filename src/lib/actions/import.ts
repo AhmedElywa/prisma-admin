@@ -47,6 +47,10 @@ export async function importCSVData(formData: FormData) {
 
   const modelDelegate = getPrismaModel(normalizeModelName(modelName));
 
+  const BATCH_SIZE = 10;
+  const recordsToCreate: Array<{ record: any; rowIndex: number }> = [];
+
+  // Process all rows and prepare records
   for (let i = startIndex; i < lines.length; i++) {
     const line = lines[i].trim();
     if (!line) {
@@ -88,9 +92,7 @@ export async function importCSVData(formData: FormData) {
         }
       }
 
-      // Create record
-      await modelDelegate.create({ data: record });
-      results.success++;
+      recordsToCreate.push({ record, rowIndex: i });
     } catch (error) {
       results.failed++;
       results.errors.push(
@@ -103,6 +105,25 @@ export async function importCSVData(formData: FormData) {
         break;
       }
     }
+  }
+
+  // Create records in batches
+  for (let i = 0; i < recordsToCreate.length; i += BATCH_SIZE) {
+    const batch = recordsToCreate.slice(i, i + BATCH_SIZE);
+
+    await Promise.all(
+      batch.map(async ({ record, rowIndex }) => {
+        try {
+          await modelDelegate.create({ data: record });
+          results.success++;
+        } catch (error) {
+          results.failed++;
+          results.errors.push(
+            `Row ${rowIndex + 1}: ${error instanceof Error ? error.message : 'Unknown error'}`
+          );
+        }
+      })
+    );
   }
 
   return results;

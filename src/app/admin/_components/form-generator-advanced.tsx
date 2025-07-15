@@ -56,7 +56,7 @@ export function FormGeneratorAdvanced({
               value: fieldWithMeta?.value,
             };
           })}
-          key={index}
+          key={`group-${index}-${group.title}`}
           title={group.title}
         />
       ))}

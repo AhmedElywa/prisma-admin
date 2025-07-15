@@ -1,7 +1,7 @@
 'use client';
 
 import { Search, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -38,7 +38,7 @@ export function RelationPicker({
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const loadItems = async () => {
+  const loadItems = useCallback(async () => {
     setLoading(true);
     try {
       const result = await getModelData(relatedModel, {
@@ -51,13 +51,13 @@ export function RelationPicker({
     } finally {
       setLoading(false);
     }
-  };
+  }, [relatedModel, search]);
 
   useEffect(() => {
     if (isOpen) {
       loadItems();
     }
-  }, [isOpen, search]);
+  }, [isOpen, loadItems]);
 
   const selectItem = (item: any) => {
     setSelectedItem(item);

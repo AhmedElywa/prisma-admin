@@ -30,7 +30,7 @@ export function RelationFilter({
   const [operator, setOperator] = useState<FilterOperator>(
     value?.operator || 'is'
   );
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
   const [relationFields, setRelationFields] = useState<FilterConfig[]>([]);
   const [nestedFilters, setNestedFilters] = useState<FilterValue[]>(
     value?.value?.filters || []

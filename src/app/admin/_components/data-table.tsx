@@ -67,6 +67,99 @@ interface DataTableProps<T extends DataRecord = DataRecord> {
   enableBulkActions?: boolean;
 }
 
+// Props for TableRowCheckbox component
+interface TableRowCheckboxProps {
+  rowId: string | number;
+  enableBulkActions: boolean;
+  canDelete?: boolean;
+  modelName?: string;
+  compact: boolean;
+  checked: boolean;
+  onCheckedChange: (rowId: string | number, checked: boolean) => void;
+}
+
+// Props for TableRowActions component
+interface TableRowActionsProps {
+  rowId: string | number;
+  canEdit?: boolean;
+  canDelete?: boolean;
+  modelName?: string;
+  compact: boolean;
+  deletingId: string | number | null;
+  onDelete: (rowId: string | number) => void;
+}
+
+// Component for row checkbox
+function TableRowCheckbox({
+  rowId,
+  enableBulkActions,
+  canDelete,
+  modelName,
+  compact,
+  checked,
+  onCheckedChange,
+}: TableRowCheckboxProps) {
+  if (!(enableBulkActions && (canDelete || modelName))) {
+    return null;
+  }
+
+  return (
+    <TableCell className={compact ? 'py-2' : ''}>
+      <Checkbox
+        aria-label={`Select row ${rowId}`}
+        checked={checked}
+        onCheckedChange={(checked) =>
+          onCheckedChange(rowId, checked as boolean)
+        }
+      />
+    </TableCell>
+  );
+}
+
+// Component for row actions
+function TableRowActions({
+  rowId,
+  canEdit,
+  canDelete,
+  modelName,
+  compact,
+  deletingId,
+  onDelete,
+}: TableRowActionsProps) {
+  if (!(canEdit || canDelete)) {
+    return null;
+  }
+
+  return (
+    <TableCell className={compact ? 'py-2' : ''}>
+      <div className="flex items-center gap-1">
+        {canEdit && modelName && (
+          <Link href={`/admin/${modelName.toLowerCase()}/${rowId}`}>
+            <Button
+              className={compact ? 'h-7 w-7' : ''}
+              size={compact ? 'sm' : 'icon'}
+              variant="ghost"
+            >
+              <Edit className={compact ? 'h-3 w-3' : 'h-4 w-4'} />
+            </Button>
+          </Link>
+        )}
+        {canDelete && (
+          <Button
+            className={compact ? 'h-7 w-7' : ''}
+            disabled={deletingId === rowId}
+            onClick={() => onDelete(rowId)}
+            size={compact ? 'sm' : 'icon'}
+            variant="ghost"
+          >
+            <Trash2 className={compact ? 'h-3 w-3' : 'h-4 w-4'} />
+          </Button>
+        )}
+      </div>
+    </TableCell>
+  );
+}
+
 export function DataTable<T extends DataRecord = DataRecord>({
   data,
   columns,
@@ -123,7 +216,7 @@ export function DataTable<T extends DataRecord = DataRecord>({
     updateUrl({ search: search || undefined, page: 1 });
   };
 
-  const handleDelete = async (id: string | number) => {
+  const handleDelete = (id: string | number) => {
     if (
       !(
         canDelete &&
@@ -159,140 +252,157 @@ export function DataTable<T extends DataRecord = DataRecord>({
     );
   };
 
-  const renderCellValue = (
+  // Helper function to create AdminField for backward compatibility
+  const createAdminField = (
+    column: DataTableColumn,
+    isList = false
+  ): AdminField => {
+    return {
+      id: `${modelName}.${column.key}`,
+      name: column.key,
+      title: column.label,
+      type: column.relationTo || 'String',
+      kind: 'object',
+      list: isList || column.isList,
+      required: false,
+      isId: false,
+      unique: false,
+      order: 0,
+      relationField: true,
+      relationFrom: column.relationFrom,
+      read: true,
+      filter: true,
+      sort: false,
+      create: false,
+      update: false,
+      editor: false,
+      upload: false,
+      relationDisplayMode: isList ? 'tags' : 'dropdown',
+      relationActions: {
+        filter: true,
+        view: !isList,
+        edit: !isList,
+        viewAll: true,
+      },
+    };
+  };
+
+  // Helper function to render relation field
+  const renderRelation = (
+    value: any,
+    column: DataTableColumn,
+    field?: AdminField,
+    rowId?: string | number
+  ): React.ReactNode => {
+    if (field) {
+      return (
+        <RelationField
+          field={field}
+          modelName={modelName || ''}
+          rowId={rowId}
+          value={value}
+        />
+      );
+    }
+    if (column.relationTo) {
+      const adminField = createAdminField(column, Array.isArray(value));
+      return (
+        <RelationField
+          field={adminField}
+          modelName={modelName || ''}
+          rowId={rowId}
+          value={value}
+        />
+      );
+    }
+    return null;
+  };
+
+  // Helper function to render array values
+  const renderArray = (value: any[]): string => {
+    return value.map((v) => v.id || v).join(', ');
+  };
+
+  // Helper function to render boolean values
+  const renderBoolean = (value: boolean): string => {
+    return value ? '✓' : '✗';
+  };
+
+  // Helper function to render date values
+  const renderDate = (value: Date | string): string => {
+    if (value instanceof Date) {
+      return value.toLocaleDateString();
+    }
+    return new Date(value).toLocaleDateString();
+  };
+
+  // Helper function to render JSON values
+  const renderJson = (value: any): React.ReactNode => {
+    return <code className="text-xs">{JSON.stringify(value)}</code>;
+  };
+
+  // Helper function to handle object values
+  const renderObject = (
     value: any,
     column: DataTableColumn
+  ): React.ReactNode => {
+    if (column.isRelation && column.relationTo && value.id) {
+      return renderRelation(value, column);
+    }
+    return value.id || '-';
+  };
+
+  // Helper function to render custom type values
+  const renderCustomType = (
+    value: any,
+    column: DataTableColumn
+  ): React.ReactNode => {
+    if (Array.isArray(value)) {
+      if (column.isRelation) {
+        return renderRelation(value, column, column.field);
+      }
+      return renderArray(value);
+    }
+    return value.toString();
+  };
+
+  const renderCellValue = (
+    value: any,
+    column: DataTableColumn,
+    rowId?: string | number
   ): React.ReactNode => {
     if (value === null || value === undefined) {
       return '-';
     }
 
-    // Use RelationField for relation columns with full metadata
+    // Handle relations with full metadata
     if (column.isRelation && column.field) {
-      return (
-        <RelationField
-          field={column.field}
-          modelName={modelName || ''}
-          value={value}
-        />
-      );
+      return renderRelation(value, column, column.field, rowId);
     }
 
-    // Fallback for relations without full metadata (backward compatibility)
+    // Handle object values (potential relations)
     if (
       typeof value === 'object' &&
       !Array.isArray(value) &&
       !(value instanceof Date)
     ) {
-      if (column.isRelation && column.relationTo && value.id) {
-        // Create a minimal field object for backward compatibility
-        const field: AdminField = {
-          id: `${modelName}.${column.key}`,
-          name: column.key,
-          title: column.label,
-          type: column.relationTo,
-          kind: 'object',
-          list: column.isList ?? false,
-          required: false,
-          isId: false,
-          unique: false,
-          order: 0,
-          relationField: true,
-          relationFrom: column.relationFrom,
-          read: true,
-          filter: true,
-          sort: false,
-          create: false,
-          update: false,
-          editor: false,
-          upload: false,
-          // Default display settings
-          relationDisplayMode: 'dropdown',
-          relationActions: {
-            filter: true,
-            view: true,
-            edit: true,
-            viewAll: true,
-          },
-        };
-
-        return (
-          <RelationField
-            field={field}
-            modelName={modelName || ''}
-            value={value}
-          />
-        );
-      }
-      return value.id || '-';
+      return renderObject(value, column);
     }
 
+    // Handle different column types
     switch (column.type) {
       case 'boolean':
-        return value ? '✓' : '✗';
+        return renderBoolean(value);
       case 'date':
       case 'datetime':
-        return value instanceof Date
-          ? value.toLocaleDateString()
-          : new Date(value).toLocaleDateString();
+        return renderDate(value);
       case 'json':
-        return <code className="text-xs">{JSON.stringify(value)}</code>;
+        return renderJson(value);
       case 'custom':
-        // Handle arrays that might be relations
-        if (Array.isArray(value) && column.isRelation && column.field) {
-          return (
-            <RelationField
-              field={column.field}
-              modelName={modelName || ''}
-              value={value}
-            />
-          );
-        }
-        // Fallback for arrays without full metadata
-        if (Array.isArray(value)) {
-          if (column.relationTo) {
-            // Create minimal field for backward compatibility
-            const field: AdminField = {
-              id: `${modelName}.${column.key}`,
-              name: column.key,
-              title: column.label,
-              type: column.relationTo,
-              kind: 'object',
-              list: true,
-              required: false,
-              isId: false,
-              unique: false,
-              order: 0,
-              relationField: true,
-              read: true,
-              filter: true,
-              sort: false,
-              create: false,
-              update: false,
-              editor: false,
-              upload: false,
-              // Default display settings for many-to-many
-              relationDisplayMode: 'tags',
-              relationActions: {
-                filter: true,
-                viewAll: true,
-              },
-            };
-
-            return (
-              <RelationField
-                field={field}
-                modelName={modelName || ''}
-                value={value}
-              />
-            );
-          }
-          return value.map((v) => v.id || v).join(', ');
-        }
-        return value.toString();
+        return renderCustomType(value, column);
       default:
         if (Array.isArray(value)) {
-          return value.map((v) => v.id || v).join(', ');
+          return renderArray(value);
         }
         return value.toString();
     }
@@ -415,59 +525,32 @@ export function DataTable<T extends DataRecord = DataRecord>({
                   data-state={selectedRows.has(row.id) ? 'selected' : undefined}
                   key={row.id}
                 >
-                  {enableBulkActions && (canDelete || modelName) && (
-                    <TableCell className={compact ? 'py-2' : ''}>
-                      <Checkbox
-                        aria-label={`Select row ${row.id}`}
-                        checked={selectedRows.has(row.id)}
-                        onCheckedChange={(checked) =>
-                          handleSelectRow(row.id, checked as boolean)
-                        }
-                      />
-                    </TableCell>
-                  )}
+                  <TableRowCheckbox
+                    canDelete={canDelete}
+                    checked={selectedRows.has(row.id)}
+                    compact={compact}
+                    enableBulkActions={enableBulkActions}
+                    modelName={modelName}
+                    onCheckedChange={handleSelectRow}
+                    rowId={row.id}
+                  />
                   {columns.map((column) => (
                     <TableCell
                       className={compact ? 'py-2' : ''}
                       key={column.key}
                     >
-                      {renderCellValue(row[column.key], column)}
+                      {renderCellValue(row[column.key], column, row.id)}
                     </TableCell>
                   ))}
-                  {(canEdit || canDelete) && (
-                    <TableCell className={compact ? 'py-2' : ''}>
-                      <div className="flex items-center gap-1">
-                        {canEdit && modelName && (
-                          <Link
-                            href={`/admin/${modelName.toLowerCase()}/${row.id}`}
-                          >
-                            <Button
-                              className={compact ? 'h-7 w-7' : ''}
-                              size={compact ? 'sm' : 'icon'}
-                              variant="ghost"
-                            >
-                              <Edit
-                                className={compact ? 'h-3 w-3' : 'h-4 w-4'}
-                              />
-                            </Button>
-                          </Link>
-                        )}
-                        {canDelete && (
-                          <Button
-                            className={compact ? 'h-7 w-7' : ''}
-                            disabled={deletingId === row.id}
-                            onClick={() => handleDelete(row.id)}
-                            size={compact ? 'sm' : 'icon'}
-                            variant="ghost"
-                          >
-                            <Trash2
-                              className={compact ? 'h-3 w-3' : 'h-4 w-4'}
-                            />
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                  )}
+                  <TableRowActions
+                    canDelete={canDelete}
+                    canEdit={canEdit}
+                    compact={compact}
+                    deletingId={deletingId}
+                    modelName={modelName}
+                    onDelete={handleDelete}
+                    rowId={row.id}
+                  />
                 </TableRow>
               ))
             )}

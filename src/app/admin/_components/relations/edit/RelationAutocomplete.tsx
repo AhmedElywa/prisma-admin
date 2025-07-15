@@ -59,34 +59,40 @@ export function RelationAutocomplete({
   const pageSize = field.relationEditOptions?.pageSize || 20;
   const minChars = 2; // Minimum characters before searching
 
-  // Load initial value display
-  useEffect(() => {
-    if (value && typeof value === 'object') {
-      const display = getDisplayValue(value);
-      setSelectedDisplay(display);
-      setSelectedValue(value.id?.toString() || '');
-    } else if (value) {
-      // Value is just an ID, load the full record
-      loadSingleRecord(value);
-    }
-  }, [
-    value,
-    getDisplayValue, // Value is just an ID, load the full record
-    loadSingleRecord,
-  ]);
-
-  async function loadSingleRecord(id: string | number) {
-    try {
-      const response = await fetch(
-        `/api/admin/data?model=${relatedModel}&id=${id}`
-      );
-      if (response.ok) {
-        const record = await response.json();
-        const display = getDisplayValue(record);
-        setSelectedDisplay(display);
+  const getDisplayValue = useCallback(
+    (record: any): string => {
+      if (!record) {
+        return '';
       }
-    } catch (_error) {}
-  }
+
+      // Try each display field in order
+      for (const field of displayFields) {
+        if (record[field]) {
+          return String(record[field]);
+        }
+      }
+
+      // Fallback to ID
+      return record.id?.toString() || '';
+    },
+    [displayFields]
+  );
+
+  const loadSingleRecord = useCallback(
+    async (id: string | number) => {
+      try {
+        const response = await fetch(
+          `/api/admin/data?model=${relatedModel}&id=${id}`
+        );
+        if (response.ok) {
+          const record = await response.json();
+          const display = getDisplayValue(record);
+          setSelectedDisplay(display);
+        }
+      } catch (_error) {}
+    },
+    [relatedModel, getDisplayValue]
+  );
 
   const loadOptions = useCallback(
     debounce(async (searchTerm: string) => {
@@ -123,21 +129,17 @@ export function RelationAutocomplete({
     }
   }, [search, open, loadOptions]);
 
-  function getDisplayValue(record: any): string {
-    if (!record) {
-      return '';
+  // Load initial value display
+  useEffect(() => {
+    if (value && typeof value === 'object') {
+      const display = getDisplayValue(value);
+      setSelectedDisplay(display);
+      setSelectedValue(value.id?.toString() || '');
+    } else if (value) {
+      // Value is just an ID, load the full record
+      loadSingleRecord(value);
     }
-
-    // Try each display field in order
-    for (const field of displayFields) {
-      if (record[field]) {
-        return String(record[field]);
-      }
-    }
-
-    // Fallback to ID
-    return record.id?.toString() || '';
-  }
+  }, [value, getDisplayValue, loadSingleRecord]);
 
   function handleSelect(option: any) {
     const optionId = option.id?.toString() || '';
@@ -160,7 +162,6 @@ export function RelationAutocomplete({
             aria-expanded={open}
             className="w-full justify-between"
             disabled={disabled}
-            role="combobox"
             variant="outline"
           >
             {selectedDisplay || placeholder || `Search ${label}...`}

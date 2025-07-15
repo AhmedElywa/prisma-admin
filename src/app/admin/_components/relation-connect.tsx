@@ -1,7 +1,7 @@
 'use client';
 
 import { Link, Loader2, Search, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -41,14 +41,20 @@ export function RelationConnect({
   const [loading, setLoading] = useState(false);
   const [modelSettings, setModelSettings] = useState<any>(null);
 
-  const loadModelSettings = async () => {
-    try {
-      const settings = await getModelSettingsData(relatedModel);
-      setModelSettings(settings);
-    } catch (_error) {}
-  };
+  useEffect(() => {
+    const loadModelSettings = async () => {
+      try {
+        const settings = await getModelSettingsData(relatedModel);
+        setModelSettings(settings);
+      } catch {
+        // ignore
+      }
+    };
 
-  const loadAvailable = async () => {
+    loadModelSettings();
+  }, [relatedModel]);
+
+  const loadAvailable = useCallback(async () => {
     setLoading(true);
     try {
       const result = await getModelData(relatedModel, {
@@ -63,21 +69,18 @@ export function RelationConnect({
         (item: any) => !connectedIds.includes(item.id)
       );
       setAvailable(filtered);
-    } catch (_error) {
+    } catch {
+      // ignore
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    loadModelSettings();
-  }, []);
+  }, [relatedModel, search, connected]);
 
   useEffect(() => {
     if (modelSettings) {
       loadAvailable();
     }
-  }, [modelSettings, search, connected]);
+  }, [modelSettings, loadAvailable]);
 
   const connect = (item: any) => {
     setConnected([...connected, item]);
@@ -130,7 +133,7 @@ export function RelationConnect({
         {/* Hidden inputs for form submission */}
         {connected.map((item, index) => (
           <input
-            key={`${name}-${index}`}
+            key={`${name}-${item.id}`}
             name={`${name}[${index}]`}
             type="hidden"
             value={item.id}
@@ -221,13 +224,14 @@ export function RelationConnect({
             ) : (
               <div className="divide-y">
                 {available.map((item) => (
-                  <div
+                  <button
                     className={cn(
-                      'flex items-center justify-between p-3 transition-colors hover:bg-accent',
+                      'flex w-full items-center justify-between p-3 text-left transition-colors hover:bg-accent',
                       'group cursor-pointer'
                     )}
                     key={item.id}
                     onClick={() => connect(item)}
+                    type="button"
                   >
                     <span className="max-w-[300px] truncate text-sm">
                       {getItemDisplay(item)}
@@ -240,7 +244,7 @@ export function RelationConnect({
                     >
                       <Link className="h-4 w-4" />
                     </Button>
-                  </div>
+                  </button>
                 ))}
               </div>
             )}

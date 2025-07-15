@@ -18,6 +18,7 @@ export function RelationCount({
   field,
   value,
   modelName,
+  rowId,
   onNavigate,
 }: RelationFieldProps) {
   const router = useRouter();
@@ -47,26 +48,62 @@ export function RelationCount({
 
     // Navigate to related model filtered by this record
     const relationModel = field.type.toLowerCase();
-    const filterField = `${modelName.toLowerCase()}Id`;
 
-    // Get the parent record ID from the current URL
-    const pathSegments = window.location.pathname.split('/');
-    const parentId = pathSegments.at(-1);
+    // Get the parent record ID
+    const parentId = rowId || window.location.pathname.split('/').at(-1);
 
-    if (onNavigate) {
+    if (onNavigate && parentId) {
       onNavigate(relationModel, parentId);
-    } else {
+    } else if (parentId) {
       const params = new URLSearchParams();
-      params.set(
-        'filters',
-        JSON.stringify([
-          {
-            field: filterField,
-            operator: 'equals',
-            value: parentId,
+
+      // Check if this is a many-to-many relation (list field with no relationFrom)
+      const isManyToMany = field.list && !field.relationFrom;
+
+      let filter: {
+        field: string;
+        operator: string;
+        value: any;
+        type?: string;
+      };
+      if (isManyToMany && field.inverseRelationField) {
+        // For many-to-many, use 'some' operator with the inverse relation field
+        // e.g., when viewing tags of a post, filter tags where posts.some(id = postId)
+        filter = {
+          field: field.inverseRelationField,
+          operator: 'some',
+          value: {
+            id:
+              typeof parentId === 'string'
+                ? Number.parseInt(parentId, 10) || parentId
+                : parentId,
           },
-        ])
-      );
+          type: 'relation',
+        };
+      } else if (field.inverseRelationField) {
+        // For one-to-many or many-to-one, use the foreign key field
+        filter = {
+          field: field.inverseRelationField,
+          operator: 'equals',
+          value:
+            typeof parentId === 'string'
+              ? Number.parseInt(parentId, 10) || parentId
+              : parentId,
+        };
+      } else {
+        // Fallback for backward compatibility
+        const filterField = `${modelName.toLowerCase()}Id`;
+        filter = {
+          field: filterField,
+          operator: 'equals',
+          value:
+            typeof parentId === 'string'
+              ? Number.parseInt(parentId, 10) || parentId
+              : parentId,
+        };
+      }
+
+      params.set('filters', JSON.stringify([filter]));
       router.push(`/admin/${relationModel}?${params.toString()}`);
     }
   };

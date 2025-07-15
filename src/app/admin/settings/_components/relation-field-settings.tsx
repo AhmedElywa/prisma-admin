@@ -20,6 +20,12 @@ import {
   RELATION_DEFAULTS,
   RELATION_PRESETS,
 } from '@/lib/admin/relation-defaults';
+import {
+  getActionHelpText,
+  getDisplayModeHelpText,
+  getValidActions,
+  getValidDisplayModes,
+} from '@/lib/admin/relation-validation';
 import type { AdminField } from '@/lib/admin/types';
 
 interface RelationFieldSettingsProps {
@@ -44,10 +50,20 @@ export function RelationFieldSettings({
   const applyPreset = (preset: keyof typeof RELATION_PRESETS) => {
     const presetConfig = RELATION_PRESETS[preset][relationType];
     if (presetConfig) {
-      const updates: Partial<AdminField> = {
-        relationDisplayMode: presetConfig.relationDisplayMode,
-        relationEditMode: presetConfig.relationEditMode,
-      };
+      const updates: Partial<AdminField> = {};
+
+      // Only apply valid display mode
+      if (presetConfig.relationDisplayMode) {
+        const validModes = getValidDisplayModes(relationType);
+        if (validModes.includes(presetConfig.relationDisplayMode)) {
+          updates.relationDisplayMode = presetConfig.relationDisplayMode;
+        }
+      }
+
+      // Apply edit mode
+      if (presetConfig.relationEditMode) {
+        updates.relationEditMode = presetConfig.relationEditMode;
+      }
 
       if ('relationLoadStrategy' in presetConfig) {
         updates.relationLoadStrategy = presetConfig.relationLoadStrategy;
@@ -59,6 +75,15 @@ export function RelationFieldSettings({
           ...presetConfig.relationEditOptions,
         };
       }
+
+      // Reset actions to only valid ones
+      const validActions = getValidActions(relationType);
+      updates.relationActions = {
+        filter: validActions.includes('filter'),
+        view: validActions.includes('view'),
+        edit: validActions.includes('edit'),
+        viewAll: validActions.includes('viewAll'),
+      };
 
       onUpdateField(updates);
     }
@@ -125,78 +150,68 @@ export function RelationFieldSettings({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="dropdown">
-                  Dropdown (with actions)
-                </SelectItem>
-                <SelectItem value="tags">Tags (pills)</SelectItem>
-                <SelectItem value="count">Count (with preview)</SelectItem>
-                <SelectItem value="inline">Inline (full display)</SelectItem>
-                <SelectItem value="badge">Badge (compact)</SelectItem>
-                <SelectItem value="link">Link (simple)</SelectItem>
+                {getValidDisplayModes(relationType).map((mode) => (
+                  <SelectItem key={mode} value={mode}>
+                    {mode === 'dropdown' && 'Dropdown (with actions)'}
+                    {mode === 'tags' && 'Tags (pills)'}
+                    {mode === 'count' && 'Count (with preview)'}
+                    {mode === 'inline' && 'Inline (full display)'}
+                    {mode === 'badge' && 'Badge (compact)'}
+                    {mode === 'link' && 'Link (simple)'}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
+            <p className="text-muted-foreground text-sm">
+              {getDisplayModeHelpText(relationType)}
+            </p>
           </div>
 
           {/* Actions */}
           <div className="space-y-2">
-            <Label>Available Actions</Label>
+            <div className="font-medium text-sm">Available Actions</div>
             <div className="space-y-2">
-              <label className="flex items-center space-x-2">
-                <Checkbox
-                  checked={field.relationActions?.filter !== false}
-                  onCheckedChange={(checked) =>
-                    onUpdateField({
-                      relationActions: {
-                        ...field.relationActions,
-                        filter: !!checked,
-                      },
-                    })
-                  }
-                />
-                <span className="text-sm">Allow Filter</span>
-              </label>
-              <label className="flex items-center space-x-2">
-                <Checkbox
-                  checked={field.relationActions?.view !== false}
-                  onCheckedChange={(checked) =>
-                    onUpdateField({
-                      relationActions: {
-                        ...field.relationActions,
-                        view: !!checked,
-                      },
-                    })
-                  }
-                />
-                <span className="text-sm">Allow View</span>
-              </label>
-              <label className="flex items-center space-x-2">
-                <Checkbox
-                  checked={field.relationActions?.edit !== false}
-                  onCheckedChange={(checked) =>
-                    onUpdateField({
-                      relationActions: {
-                        ...field.relationActions,
-                        edit: !!checked,
-                      },
-                    })
-                  }
-                />
-                <span className="text-sm">Allow Edit</span>
-              </label>
-              <label className="flex items-center space-x-2">
-                <Checkbox
-                  checked={field.relationActions?.viewAll !== false}
-                  onCheckedChange={(checked) =>
-                    onUpdateField({
-                      relationActions: {
-                        ...field.relationActions,
-                        viewAll: !!checked,
-                      },
-                    })
-                  }
-                />
-                <span className="text-sm">Allow View All</span>
-              </label>
+              {(['filter', 'view', 'edit', 'viewAll'] as const).map(
+                (action) => {
+                  const validActions = getValidActions(relationType);
+                  const isValid = validActions.includes(action);
+                  const helpText = getActionHelpText(relationType, action);
+
+                  return (
+                    <div className="space-y-1" key={action}>
+                      <label
+                        className={`flex items-center space-x-2 ${isValid ? '' : 'opacity-50'}`}
+                      >
+                        <Checkbox
+                          checked={
+                            field.relationActions?.[action] !== false && isValid
+                          }
+                          disabled={!isValid}
+                          onCheckedChange={(checked) =>
+                            onUpdateField({
+                              relationActions: {
+                                ...field.relationActions,
+                                [action]: !!checked,
+                              },
+                            })
+                          }
+                        />
+                        <span className="text-sm">
+                          Allow{' '}
+                          {action === 'viewAll'
+                            ? 'View All'
+                            : action.charAt(0).toUpperCase() + action.slice(1)}
+                        </span>
+                      </label>
+                      {helpText && (
+                        <p className="ml-6 text-muted-foreground text-xs">
+                          {helpText}
+                        </p>
+                      )}
+                    </div>
+                  );
+                }
+              )}
             </div>
           </div>
         </TabsContent>

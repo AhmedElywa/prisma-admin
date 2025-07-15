@@ -17,9 +17,10 @@ export class DebugUtils {
   static async debugSelector(page: Page, selector: string) {
     const elements = await page.locator(selector).all();
 
-    for (let i = 0; i < elements.length; i++) {
-      const _text = await elements[i].textContent();
-      const _isVisible = await elements[i].isVisible();
+    for (const element of elements) {
+      const text = await element.textContent();
+      const isVisible = await element.isVisible();
+      console.log(`  - Text: "${text}", Visible: ${isVisible}`);
     }
   }
 
@@ -68,6 +69,7 @@ export class DebugUtils {
         return selector;
       }
       if (count > 1) {
+        console.log(`  Multiple matches (${count}) - be more specific`);
       }
     }
   }

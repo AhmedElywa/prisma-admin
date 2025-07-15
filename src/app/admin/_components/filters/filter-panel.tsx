@@ -12,7 +12,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
-import { FilterGroup } from './filter-group';
+import { AdvancedFilterPanel } from './advanced-filter-panel';
 import type { FilterConfig, FilterValue } from './types';
 
 interface FilterPanelProps {
@@ -37,10 +37,20 @@ export function FilterPanel({
     : [];
 
   const [tempFilters, setTempFilters] = useState<FilterValue[]>(currentFilters);
+  const [justCleared, setJustCleared] = useState(false);
 
-  // Check if filters have changed
+  // Check if filters have changed - compare meaningful properties only
+  const normalizeFilter = (filter: FilterValue) => {
+    const { field, operator, value, type } = filter;
+    return { field, operator, value, type };
+  };
+
+  const normalizedTemp = tempFilters.map(normalizeFilter);
+  const normalizedCurrent = currentFilters.map(normalizeFilter);
+
   const hasChanges =
-    JSON.stringify(tempFilters) !== JSON.stringify(currentFilters);
+    JSON.stringify(normalizedTemp) !== JSON.stringify(normalizedCurrent) ||
+    justCleared;
 
   const handleApplyFilters = () => {
     const params = new URLSearchParams(searchParams.toString());
@@ -56,6 +66,7 @@ export function FilterPanel({
 
     router.push(`?${params.toString()}`);
     setIsOpen(false);
+    setJustCleared(false);
   };
 
   const handleClearFilters = () => {
@@ -160,7 +171,17 @@ export function FilterPanel({
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <Sheet onOpenChange={setIsOpen} open={isOpen}>
+      <Sheet
+        onOpenChange={(open) => {
+          setIsOpen(open);
+          // Reset temp filters to current when opening
+          if (open) {
+            setTempFilters(currentFilters);
+            setJustCleared(false);
+          }
+        }}
+        open={isOpen}
+      >
         <SheetTrigger asChild>
           <Button size="sm" variant="outline">
             <Filter className="mr-2 h-4 w-4" />
@@ -172,29 +193,38 @@ export function FilterPanel({
             )}
           </Button>
         </SheetTrigger>
-        <SheetContent className="flex w-[400px] flex-col sm:w-[540px]">
-          <SheetHeader className="space-y-1">
+        <SheetContent className="flex w-[500px] flex-col sm:w-[700px] sm:max-w-[700px] lg:w-[800px] lg:max-w-[800px]">
+          <SheetHeader className="space-y-1 px-6">
             <SheetTitle>Filter {modelName}</SheetTitle>
             <p className="text-muted-foreground text-sm">
               Add filters to refine your search results
             </p>
           </SheetHeader>
 
-          <div className="flex-1 overflow-y-auto py-6">
-            <FilterGroup
+          <div className="flex-1 overflow-y-auto px-6 py-6">
+            <AdvancedFilterPanel
               fields={fields}
               filters={tempFilters}
               getRelationFields={getRelationFields}
+              key={isOpen ? 'open' : 'closed'}
               onChange={setTempFilters}
             />
           </div>
 
-          <div className="space-y-2 border-t pt-4 pb-2">
+          <div className="space-y-2 border-t px-6 pt-4 pb-4">
             <div className="flex gap-2">
               <Button
                 className="flex-1"
-                disabled={tempFilters.length === 0}
-                onClick={() => setTempFilters([])}
+                disabled={
+                  tempFilters.length === 0 && currentFilters.length === 0
+                }
+                onClick={() => {
+                  setTempFilters([]);
+                  // If there are current filters, mark that we just cleared
+                  if (currentFilters.length > 0) {
+                    setJustCleared(true);
+                  }
+                }}
                 variant="outline"
               >
                 Clear All
@@ -228,11 +258,16 @@ export function FilterPanel({
         <>
           <div className="flex flex-wrap items-center gap-2">
             {currentFilters.map((filter, index) => (
-              <Badge className="gap-1" key={index} variant="secondary">
+              <Badge
+                className="gap-1"
+                key={`filter-${index}-${filter.field}-${filter.operator}`}
+                variant="secondary"
+              >
                 <span className="text-xs">{getFilterLabel(filter)}</span>
                 <button
                   className="ml-1 hover:text-destructive"
                   onClick={() => handleRemoveFilter(index)}
+                  type="button"
                 >
                   <X className="h-3 w-3" />
                 </button>

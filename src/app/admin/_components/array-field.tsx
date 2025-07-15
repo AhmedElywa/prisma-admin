@@ -241,6 +241,9 @@ export function ArrayField({
           valueToAdd = newValue;
         }
         break;
+      default:
+        // Keep string value as is
+        break;
     }
 
     if (valueToAdd !== '' && valueToAdd !== null) {
@@ -282,9 +285,12 @@ export function ArrayField({
           <Input
             className="flex-1"
             onChange={(e) => setNewValue(e.target.value)}
-            onKeyDown={(e) =>
-              e.key === 'Enter' && (e.preventDefault(), addItem())
-            }
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                addItem();
+              }
+            }}
             placeholder={placeholder}
             step={type === 'Float' ? '0.01' : '1'}
             type="number"
@@ -315,9 +321,12 @@ export function ArrayField({
           <Input
             className="flex-1"
             onChange={(e) => setNewValue(e.target.value)}
-            onKeyDown={(e) =>
-              e.key === 'Enter' && (e.preventDefault(), addItem())
-            }
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                addItem();
+              }
+            }}
             placeholder={placeholder}
             type="text"
             value={newValue}

@@ -175,7 +175,6 @@ export function RelationSelect({
             aria-expanded={open}
             className="w-full justify-between"
             disabled={disabled}
-            role="combobox"
             variant="outline"
           >
             <span className="truncate">
