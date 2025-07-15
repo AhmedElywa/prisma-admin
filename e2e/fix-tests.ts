@@ -117,7 +117,5 @@ async function findTestFiles(dir: string): Promise<string[]> {
   const args = process.argv.slice(2);
   if (args.includes('--check-selectors')) {
     await testSelectors();
-  } else {
-    await analyzeTests();
   }
 })();

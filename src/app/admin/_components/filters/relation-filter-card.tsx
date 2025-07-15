@@ -89,7 +89,7 @@ export function RelationFilterCard({
     setConditions([
       ...conditions,
       {
-        id: Math.random().toString(36).substr(2, 9),
+        id: Math.random().toString(36).substring(2, 11),
         field: '',
         operator: 'equals',
         value: '',

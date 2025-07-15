@@ -40,7 +40,7 @@ export function AdvancedFilterPanel({
 
     return {
       relations: relationFilters.map((f) => ({
-        id: Math.random().toString(36).substring(2, 9),
+        id: Math.random().toString(36).substring(2, 11),
         field: f.field,
         operator: f.operator,
         conditions: f.value
@@ -50,13 +50,13 @@ export function AdvancedFilterPanel({
                 field,
                 operator: op,
                 value: condition[op],
-                type: 'String', // This should be determined from the actual field type
+                type: 'String', // TODO: Determine from relation field metadata
               };
             })
           : [],
       })),
       fields: fieldFilters.map((f) => ({
-        id: Math.random().toString(36).substring(2, 9),
+        id: Math.random().toString(36).substring(2, 11),
         ...f,
       })),
     };
@@ -69,8 +69,9 @@ export function AdvancedFilterPanel({
     () => initializeFilters().fields
   );
 
-  // Note: We don't sync state when filters prop changes to avoid infinite loops
-  // The parent component (filter-panel) handles resetting filters when sheet opens
+  // We don't sync the `filters` prop into state to avoid infinite loops.
+  // Instead, <FilterPanel> resets its own tempFilters and toggles this component's
+  // `key` (open/closed) on each sheet open, ensuring a fresh mount and state reset.
 
   const addRelationFilter = () => {
     setTempRelationFilters([
@@ -207,7 +208,7 @@ export function AdvancedFilterPanel({
             <div className="space-y-3">
               {tempRelationFilters.map((filter) => (
                 <RelationFilterCard
-                  getRelationFields={getRelationFields || (async () => [])}
+                  getRelationFields={getRelationFields || (() => Promise.resolve([]))}
                   key={filter.id}
                   onChange={(value) => updateRelationFilter(filter.id, value)}
                   onRemove={() => removeRelationFilter(filter.id)}

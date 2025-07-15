@@ -9,7 +9,7 @@ interface DatePickerProps {
 }
 
 export function DatePicker({ value, onChange, placeholder }: DatePickerProps) {
-  const formatDateForInput = (date: any) => {
+  const formatDateForInput = (date: string | Date | null | undefined) => {
     if (!date) {
       return '';
     }
@@ -25,7 +25,14 @@ export function DatePicker({ value, onChange, placeholder }: DatePickerProps) {
       className="w-full"
       onChange={(e) => {
         if (e.target.value) {
-          onChange(new Date(e.target.value).toISOString());
+          try {
+            const date = new Date(e.target.value);
+            if (!isNaN(date.getTime())) {
+              onChange(date.toISOString());
+            }
+          } catch {
+            // Invalid date input, ignore
+          }
         } else {
           onChange('');
         }

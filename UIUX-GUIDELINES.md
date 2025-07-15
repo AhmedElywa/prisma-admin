@@ -161,23 +161,23 @@ const config: Config = {
 #### Admin Card Component
 ```tsx
 const AdminCard = ({ title, children }) => (
-  <div class="bg-white rounded-lg shadow-md p-6">
+  <div className="bg-white rounded-lg shadow-md p-6">
     {/* Header */}
-    <div class="flex items-center gap-3 mb-4">
-      <h3 class="text-lg font-semibold text-start">{title}</h3>
+    <div className="flex items-center gap-3 mb-4">
+      <h3 className="text-lg font-semibold text-start">{title}</h3>
     </div>
     
     {/* Content */}
-    <div class="text-gray-600 text-start">
+    <div className="text-gray-600 text-start">
       {children}
     </div>
     
     {/* Actions */}
-    <div class="flex gap-2 justify-end mt-4">
-      <button class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">
+    <div className="flex gap-2 justify-end mt-4">
+      <button className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">
         Cancel
       </button>
-      <button class="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded">
+      <button className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded">
         Save
       </button>
     </div>
@@ -188,21 +188,21 @@ const AdminCard = ({ title, children }) => (
 #### Data Table
 ```tsx
 const DataTable = () => (
-  <div class="overflow-x-auto">
-    <table class="w-full">
+  <div className="overflow-x-auto">
+    <table className="w-full">
       <thead>
-        <tr class="border-b">
-          <th class="px-4 py-2 text-start">Name</th>
-          <th class="px-4 py-2 text-start">Email</th>
-          <th class="px-4 py-2 text-end">Actions</th>
+        <tr className="border-b">
+          <th className="px-4 py-2 text-start">Name</th>
+          <th className="px-4 py-2 text-start">Email</th>
+          <th className="px-4 py-2 text-end">Actions</th>
         </tr>
       </thead>
       <tbody>
-        <tr class="border-b hover:bg-gray-50">
-          <td class="px-4 py-2 text-start">John Doe</td>
-          <td class="px-4 py-2 text-start">john@example.com</td>
-          <td class="px-4 py-2 text-end">
-            <button class="text-blue-600 hover:underline">Edit</button>
+        <tr className="border-b hover:bg-gray-50">
+          <td className="px-4 py-2 text-start">John Doe</td>
+          <td className="px-4 py-2 text-start">john@example.com</td>
+          <td className="px-4 py-2 text-end">
+            <button className="text-blue-600 hover:underline">Edit</button>
           </td>
         </tr>
       </tbody>
@@ -214,13 +214,13 @@ const DataTable = () => (
 #### Form Layout
 ```tsx
 const FormField = ({ label, type = "text" }) => (
-  <div class="mb-4">
-    <label class="block text-sm font-medium text-gray-700 text-start mb-1">
+  <div className="mb-4">
+    <label className="block text-sm font-medium text-gray-700 text-start mb-1">
       {label}
     </label>
     <input
       type={type}
-      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
     />
   </div>
 );
