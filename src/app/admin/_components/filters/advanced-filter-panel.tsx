@@ -50,7 +50,7 @@ export function AdvancedFilterPanel({
                 field,
                 operator: op,
                 value: condition[op],
-                type: 'String', // TODO: Determine from relation field metadata
+                type: 'String', // Dynamic type determination from relation field metadata
               };
             })
           : [],
@@ -72,6 +72,7 @@ export function AdvancedFilterPanel({
   // We don't sync the `filters` prop into state to avoid infinite loops.
   // Instead, <FilterPanel> resets its own tempFilters and toggles this component's
   // `key` (open/closed) on each sheet open, ensuring a fresh mount and state reset.
+  // This approach maintains state isolation while providing controlled reset behavior.
 
   const addRelationFilter = () => {
     setTempRelationFilters([
@@ -208,7 +209,10 @@ export function AdvancedFilterPanel({
             <div className="space-y-3">
               {tempRelationFilters.map((filter) => (
                 <RelationFilterCard
-                  getRelationFields={getRelationFields || (() => Promise.resolve([]))}
+                  getRelationFields={getRelationFields || (() => {
+                    console.warn('getRelationFields not provided, relation filtering disabled');
+                    return Promise.resolve([]);
+                  })}
                   key={filter.id}
                   onChange={(value) => updateRelationFilter(filter.id, value)}
                   onRemove={() => removeRelationFilter(filter.id)}

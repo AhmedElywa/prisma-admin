@@ -14,7 +14,11 @@ export function DatePicker({ value, onChange, placeholder }: DatePickerProps) {
       return '';
     }
     try {
-      return new Date(date).toISOString().slice(0, 16);
+      const parsedDate = new Date(date);
+      if (isNaN(parsedDate.getTime())) {
+        return '';
+      }
+      return parsedDate.toISOString().slice(0, 16);
     } catch {
       return '';
     }
