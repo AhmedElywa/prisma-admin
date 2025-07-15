@@ -7,7 +7,7 @@ export const test = base.extend({
     await page.goto('/admin');
     await use(page);
   },
-  
+
   // Fixture for authenticated tests
   authenticatedPage: async ({ page }, use) => {
     // TODO: Implement authentication logic once auth is set up

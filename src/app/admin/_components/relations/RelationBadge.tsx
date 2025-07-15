@@ -1,52 +1,64 @@
-'use client'
+'use client';
 
-import { Badge } from '@/components/ui/badge'
+import { useRouter } from 'next/navigation';
+import { Badge } from '@/components/ui/badge';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@/components/ui/tooltip'
-import { useRouter } from 'next/navigation'
-import { RelationFieldProps, getRelationDisplayValue, shouldShowAction } from './RelationField'
+} from '@/components/ui/tooltip';
+import {
+  getRelationDisplayValue,
+  type RelationFieldProps,
+  shouldShowAction,
+} from './RelationField';
 
 export function RelationBadge({
   field,
   value,
   modelName,
-  onNavigate
+  onNavigate,
 }: RelationFieldProps) {
-  const router = useRouter()
-  const relationModel = field.type.toLowerCase()
-  
+  const router = useRouter();
+  const relationModel = field.type.toLowerCase();
+
   // Handle array values
   if (Array.isArray(value)) {
-    const count = value.length
-    const label = `${count} ${field.title || field.name}`
-    
+    const count = value.length;
+    const label = `${count} ${field.title || field.name}`;
+
     return (
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
             <Badge
-              variant="outline"
-              className={shouldShowAction(field, 'viewAll') ? "cursor-pointer" : ""}
+              className={
+                shouldShowAction(field, 'viewAll') ? 'cursor-pointer' : ''
+              }
               onClick={() => {
                 if (shouldShowAction(field, 'viewAll')) {
-                  router.push(`/admin/${relationModel}`)
+                  router.push(`/admin/${relationModel}`);
                 }
               }}
+              variant="outline"
             >
               {label}
             </Badge>
           </TooltipTrigger>
           <TooltipContent>
             <div className="max-w-xs">
-              <div className="font-medium mb-1">{field.title || field.name}</div>
-              <div className="text-sm space-y-0.5">
+              <div className="mb-1 font-medium">
+                {field.title || field.name}
+              </div>
+              <div className="space-y-0.5 text-sm">
                 {value.slice(0, 5).map((item) => (
-                  <div key={item.id} className="text-muted-foreground">
-                    • {getRelationDisplayValue(item, field.relationEditOptions?.previewFields)}
+                  <div className="text-muted-foreground" key={item.id}>
+                    •{' '}
+                    {getRelationDisplayValue(
+                      item,
+                      field.relationEditOptions?.previewFields
+                    )}
                   </div>
                 ))}
                 {value.length > 5 && (
@@ -59,27 +71,30 @@ export function RelationBadge({
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
-    )
+    );
   }
-  
+
   // Handle single value
-  const displayValue = getRelationDisplayValue(value, field.relationEditOptions?.previewFields)
-  
+  const displayValue = getRelationDisplayValue(
+    value,
+    field.relationEditOptions?.previewFields
+  );
+
   return (
     <Badge
-      variant="secondary"
-      className={shouldShowAction(field, 'view') ? "cursor-pointer" : ""}
+      className={shouldShowAction(field, 'view') ? 'cursor-pointer' : ''}
       onClick={() => {
         if (shouldShowAction(field, 'view')) {
           if (onNavigate) {
-            onNavigate(relationModel, value.id)
+            onNavigate(relationModel, value.id);
           } else {
-            router.push(`/admin/${relationModel}/${value.id}`)
+            router.push(`/admin/${relationModel}/${value.id}`);
           }
         }
       }}
+      variant="secondary"
     >
       {displayValue}
     </Badge>
-  )
+  );
 }

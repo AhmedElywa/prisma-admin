@@ -1,18 +1,21 @@
-'use client'
+'use client';
 
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { RelationFieldProps, getRelationDisplayValue, shouldShowAction } from './RelationField'
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import {
+  getRelationDisplayValue,
+  type RelationFieldProps,
+} from './RelationField';
 
 export function RelationLink({
   field,
   value,
   modelName,
-  onNavigate
+  onNavigate,
 }: RelationFieldProps) {
-  const router = useRouter()
-  const relationModel = field.type.toLowerCase()
-  
+  const _router = useRouter();
+  const relationModel = field.type.toLowerCase();
+
   // Handle array values (show as comma-separated links)
   if (Array.isArray(value)) {
     return (
@@ -21,49 +24,55 @@ export function RelationLink({
           <span key={item.id}>
             {index > 0 && <span className="text-muted-foreground">, </span>}
             <Link
-              href={`/admin/${relationModel}/${item.id}`}
               className="text-primary hover:underline"
+              href={`/admin/${relationModel}/${item.id}`}
               onClick={(e) => {
                 if (onNavigate) {
-                  e.preventDefault()
-                  onNavigate(relationModel, item.id)
+                  e.preventDefault();
+                  onNavigate(relationModel, item.id);
                 }
               }}
             >
-              {getRelationDisplayValue(item, field.relationEditOptions?.previewFields)}
+              {getRelationDisplayValue(
+                item,
+                field.relationEditOptions?.previewFields
+              )}
             </Link>
           </span>
         ))}
       </div>
-    )
+    );
   }
-  
+
   // Handle single value
-  const displayValue = getRelationDisplayValue(value, field.relationEditOptions?.previewFields)
-  
+  const displayValue = getRelationDisplayValue(
+    value,
+    field.relationEditOptions?.previewFields
+  );
+
   return (
     <Link
-      href={`/admin/${relationModel}/${value.id}`}
       className="text-primary hover:underline"
+      href={`/admin/${relationModel}/${value.id}`}
       onClick={(e) => {
         if (onNavigate) {
-          e.preventDefault()
-          onNavigate(relationModel, value.id)
+          e.preventDefault();
+          onNavigate(relationModel, value.id);
         }
       }}
     >
       {displayValue}
     </Link>
-  )
+  );
 }
 
 // Legacy component for backward compatibility
 interface LegacyRelationLinkProps {
-  modelName: string
-  relationModel: string
-  relationId: string | number
-  displayValue: string
-  filterField?: string
+  modelName: string;
+  relationModel: string;
+  relationId: string | number;
+  displayValue: string;
+  filterField?: string;
 }
 
 export function LegacyRelationLink({
@@ -71,7 +80,7 @@ export function LegacyRelationLink({
   relationModel,
   relationId,
   displayValue,
-  filterField
+  filterField,
 }: LegacyRelationLinkProps) {
   const field = {
     name: filterField || '',
@@ -81,18 +90,18 @@ export function LegacyRelationLink({
       filter: !!filterField,
       view: true,
       edit: true,
-      viewAll: true
-    }
-  } as any
+      viewAll: true,
+    },
+  } as any;
 
   return (
     <RelationDropdown
       field={field}
-      value={{ id: relationId, name: displayValue }}
       modelName={modelName}
+      value={{ id: relationId, name: displayValue }}
     />
-  )
+  );
 }
 
 // Import RelationDropdown for legacy support
-import { RelationDropdown } from './RelationDropdown'
+import { RelationDropdown } from './RelationDropdown';

@@ -1,4 +1,4 @@
-import { Page, expect } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 
 export class DebugUtils {
   /**
@@ -16,12 +16,10 @@ export class DebugUtils {
    */
   static async debugSelector(page: Page, selector: string) {
     const elements = await page.locator(selector).all();
-    console.log(`Found ${elements.length} elements matching "${selector}"`);
-    
+
     for (let i = 0; i < elements.length; i++) {
-      const text = await elements[i].textContent();
-      const isVisible = await elements[i].isVisible();
-      console.log(`  [${i}]: "${text}" (visible: ${isVisible})`);
+      const _text = await elements[i].textContent();
+      const _isVisible = await elements[i].isVisible();
     }
   }
 
@@ -29,9 +27,9 @@ export class DebugUtils {
    * Take a screenshot with a descriptive name
    */
   static async screenshot(page: Page, name: string) {
-    await page.screenshot({ 
+    await page.screenshot({
       path: `test-results/debug-${name}-${Date.now()}.png`,
-      fullPage: true 
+      fullPage: true,
     });
   }
 
@@ -39,20 +37,17 @@ export class DebugUtils {
    * Log current URL and page title
    */
   static async logPageInfo(page: Page) {
-    const url = page.url();
-    const title = await page.title();
-    console.log(`Current page: ${url}`);
-    console.log(`Page title: ${title}`);
+    const _url = page.url();
+    const _title = await page.title();
   }
 
   /**
    * Wait for navigation with logging
    */
   static async navigateAndWait(page: Page, url: string) {
-    console.log(`Navigating to: ${url}`);
     await page.goto(url);
-    await this.waitForAdminPage(page);
-    await this.logPageInfo(page);
+    await DebugUtils.waitForAdminPage(page);
+    await DebugUtils.logPageInfo(page);
   }
 
   /**
@@ -70,22 +65,18 @@ export class DebugUtils {
     for (const selector of selectors) {
       const count = await page.locator(selector).count();
       if (count === 1) {
-        console.log(`Best selector for "${text}": ${selector}`);
         return selector;
-      } else if (count > 1) {
-        console.log(`Selector ${selector} matches ${count} elements`);
+      }
+      if (count > 1) {
       }
     }
-    console.log(`No unique selector found for "${text}"`);
   }
 
   /**
    * Interactive debug mode - pauses and provides info
    */
-  static async interactiveDebug(page: Page, message: string = 'Debug pause') {
-    console.log(`\n🔍 ${message}`);
-    await this.logPageInfo(page);
-    console.log('Pausing for inspection...\n');
+  static async interactiveDebug(page: Page, _message = 'Debug pause') {
+    await DebugUtils.logPageInfo(page);
     await page.pause();
   }
 }

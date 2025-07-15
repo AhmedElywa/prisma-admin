@@ -1,22 +1,22 @@
-'use server'
+'use server';
 
-import { prisma } from '@/lib/prisma'
-import { revalidatePath } from 'next/cache'
-import { z } from 'zod'
+import { revalidatePath } from 'next/cache';
+import { z } from 'zod';
+import { prisma } from '@/lib/prisma';
 
 const UserCreateSchema = z.object({
   email: z.string().email(),
   name: z.string().nullable(),
   password: z.string().min(6),
   settings: z.any().optional(),
-})
+});
 
 const UserUpdateSchema = z.object({
   email: z.string().email().optional(),
   name: z.string().nullable().optional(),
   password: z.string().min(6).optional(),
   settings: z.any().optional(),
-})
+});
 
 export async function getUsers({
   page = 1,
@@ -25,13 +25,13 @@ export async function getUsers({
   order = 'asc',
   search,
 }: {
-  page?: number
-  perPage?: number
-  orderBy?: string
-  order?: 'asc' | 'desc'
-  search?: string
+  page?: number;
+  perPage?: number;
+  orderBy?: string;
+  order?: 'asc' | 'desc';
+  search?: string;
 }) {
-  const skip = (page - 1) * perPage
+  const skip = (page - 1) * perPage;
 
   const where = search
     ? {
@@ -40,7 +40,7 @@ export async function getUsers({
           { name: { contains: search, mode: 'insensitive' as const } },
         ],
       }
-    : {}
+    : {};
 
   const [users, total] = await Promise.all([
     prisma.user.findMany({
@@ -58,7 +58,7 @@ export async function getUsers({
       },
     }),
     prisma.user.count({ where }),
-  ])
+  ]);
 
   return {
     data: users,
@@ -66,7 +66,7 @@ export async function getUsers({
     page,
     perPage,
     totalPages: Math.ceil(total / perPage),
-  }
+  };
 }
 
 export async function getUser(id: number) {
@@ -76,62 +76,62 @@ export async function getUser(id: number) {
       posts: true,
       profile: true,
     },
-  })
+  });
 }
 
 export async function createUser(data: FormData) {
-  const formData: Record<string, any> = Object.fromEntries(data)
-  
+  const formData: Record<string, any> = Object.fromEntries(data);
+
   // Parse settings JSON if provided
   if (formData.settings && typeof formData.settings === 'string') {
     try {
-      formData.settings = JSON.parse(formData.settings)
+      formData.settings = JSON.parse(formData.settings);
     } catch {
-      formData.settings = {}
+      formData.settings = {};
     }
   }
 
-  const validated = UserCreateSchema.parse(formData)
+  const validated = UserCreateSchema.parse(formData);
 
   await prisma.user.create({
     data: validated,
-  })
+  });
 
-  revalidatePath('/admin/user')
+  revalidatePath('/admin/user');
 }
 
 export async function updateUser(id: number, data: FormData) {
-  const formData: Record<string, any> = Object.fromEntries(data)
-  
+  const formData: Record<string, any> = Object.fromEntries(data);
+
   // Remove empty password field
   if (formData.password === '') {
-    delete formData.password
+    formData.password = undefined;
   }
-  
+
   // Parse settings JSON if provided
   if (formData.settings && typeof formData.settings === 'string') {
     try {
-      formData.settings = JSON.parse(formData.settings)
+      formData.settings = JSON.parse(formData.settings);
     } catch {
-      formData.settings = {}
+      formData.settings = {};
     }
   }
 
-  const validated = UserUpdateSchema.parse(formData)
+  const validated = UserUpdateSchema.parse(formData);
 
   await prisma.user.update({
     where: { id },
     data: validated,
-  })
+  });
 
-  revalidatePath('/admin/user')
-  revalidatePath(`/admin/user/${id}`)
+  revalidatePath('/admin/user');
+  revalidatePath(`/admin/user/${id}`);
 }
 
 export async function deleteUser(id: number) {
   await prisma.user.delete({
     where: { id },
-  })
+  });
 
-  revalidatePath('/admin/user')
+  revalidatePath('/admin/user');
 }

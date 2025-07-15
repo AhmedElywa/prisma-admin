@@ -1,20 +1,20 @@
-'use client'
+'use client';
 
-import { AdminField } from '@/lib/admin/types'
-import { RelationDropdown } from './RelationDropdown'
-import { TagList } from './TagList'
-import { RelationCount } from './RelationCount'
-import { RelationInline } from './RelationInline'
-import { RelationLink } from './RelationLink'
-import { RelationBadge } from './RelationBadge'
+import type { AdminField } from '@/lib/admin/types';
+import { RelationBadge } from './RelationBadge';
+import { RelationCount } from './RelationCount';
+import { RelationDropdown } from './RelationDropdown';
+import { RelationInline } from './RelationInline';
+import { RelationLink } from './RelationLink';
+import { TagList } from './TagList';
 
 export interface RelationFieldProps {
-  field: AdminField
-  value: any
-  modelName: string
-  onFilter?: (field: string, value: any) => void
-  onNavigate?: (model: string, id: string | number) => void
-  onPreview?: (model: string, id: string | number) => void
+  field: AdminField;
+  value: any;
+  modelName: string;
+  onFilter?: (field: string, value: any) => void;
+  onNavigate?: (model: string, id: string | number) => void;
+  onPreview?: (model: string, id: string | number) => void;
 }
 
 export function RelationField({
@@ -23,16 +23,16 @@ export function RelationField({
   modelName,
   onFilter,
   onNavigate,
-  onPreview
+  onPreview,
 }: RelationFieldProps) {
   // Handle null/undefined values
   if (value === null || value === undefined) {
-    return <span className="text-muted-foreground">-</span>
+    return <span className="text-muted-foreground">-</span>;
   }
 
   // Get display mode from field settings or default to 'link'
-  const displayMode = field.relationDisplayMode || 'link'
-  
+  const displayMode = field.relationDisplayMode || 'link';
+
   // Common props for all sub-components
   const commonProps = {
     field,
@@ -40,29 +40,27 @@ export function RelationField({
     modelName,
     onFilter,
     onNavigate,
-    onPreview
-  }
+    onPreview,
+  };
 
   // Render based on display mode
   switch (displayMode) {
     case 'dropdown':
-      return <RelationDropdown {...commonProps} />
-      
+      return <RelationDropdown {...commonProps} />;
+
     case 'tags':
-      return <TagList {...commonProps} />
-      
+      return <TagList {...commonProps} />;
+
     case 'count':
-      return <RelationCount {...commonProps} />
-      
+      return <RelationCount {...commonProps} />;
+
     case 'inline':
-      return <RelationInline {...commonProps} />
-      
+      return <RelationInline {...commonProps} />;
+
     case 'badge':
-      return <RelationBadge {...commonProps} />
-      
-    case 'link':
+      return <RelationBadge {...commonProps} />;
     default:
-      return <RelationLink {...commonProps} />
+      return <RelationLink {...commonProps} />;
   }
 }
 
@@ -72,17 +70,15 @@ export function getRelationDisplayValue(
   previewFields?: string[]
 ): string {
   if (!item || typeof item !== 'object') {
-    return String(item)
+    return String(item);
   }
 
   // If preview fields are specified, use them
   if (previewFields && previewFields.length > 0) {
-    const values = previewFields
-      .map(field => item[field])
-      .filter(Boolean)
-    
+    const values = previewFields.map((field) => item[field]).filter(Boolean);
+
     if (values.length > 0) {
-      return values.join(' - ')
+      return values.join(' - ');
     }
   }
 
@@ -95,7 +91,7 @@ export function getRelationDisplayValue(
     item.username ||
     item.id ||
     'Unknown'
-  )
+  );
 }
 
 // Helper to check if we should show an action
@@ -103,5 +99,5 @@ export function shouldShowAction(
   field: AdminField,
   action: keyof NonNullable<AdminField['relationActions']>
 ): boolean {
-  return field.relationActions?.[action] !== false
+  return field.relationActions?.[action] !== false;
 }

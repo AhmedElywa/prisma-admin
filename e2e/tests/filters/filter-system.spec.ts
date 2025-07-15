@@ -1,9 +1,9 @@
-import { test, expect } from '../../fixtures/test';
-import { AdminLayout } from '../../pages/admin-layout';
-import { ModelListPage } from '../../pages/model-list';
-import { FilterPanel } from '../../pages/filter-panel';
+import { expect, test } from '../../fixtures/test';
 import { TestDataGenerator } from '../../helpers/test-data';
+import { AdminLayout } from '../../pages/admin-layout';
+import { FilterPanel } from '../../pages/filter-panel';
 import { ModelFormPage } from '../../pages/model-form';
+import { ModelListPage } from '../../pages/model-list';
 
 test.describe('Filter System', () => {
   let adminLayout: AdminLayout;
@@ -16,7 +16,7 @@ test.describe('Filter System', () => {
     listPage = new ModelListPage(page);
     filterPanel = new FilterPanel(page);
     formPage = new ModelFormPage(page);
-    
+
     // Navigate to User model
     await page.goto('/admin/user');
   });
@@ -25,7 +25,7 @@ test.describe('Filter System', () => {
     // Open filter panel
     await filterPanel.open();
     await expect(filterPanel.filterPanel).toBeVisible();
-    
+
     // Close filter panel
     await filterPanel.close();
     await expect(filterPanel.filterPanel).not.toBeVisible();
@@ -39,16 +39,16 @@ test.describe('Filter System', () => {
     await formPage.fillField('Name', 'Filter Test User');
     await formPage.submit();
     await formPage.waitForSuccess();
-    
+
     // Apply email filter
     await filterPanel.open();
     await filterPanel.addFilter('Email', 'contains', 'filter-test');
     await filterPanel.apply();
-    
+
     // Verify filtered results
     const rowCount = await listPage.getRowCount();
     expect(rowCount).toBeGreaterThan(0);
-    
+
     // Check that filtered user appears
     const emailCell = await listPage.getCellContent(0, 'email');
     expect(emailCell).toContain('filter-test');
@@ -62,7 +62,7 @@ test.describe('Filter System', () => {
       { email: `${baseEmail}-user@example.com`, name: 'Regular User' },
       { email: `${baseEmail}-admin@test.com`, name: 'Test Admin' },
     ];
-    
+
     for (const user of users) {
       await listPage.clickCreate();
       await formPage.fillField('Email', user.email);
@@ -70,13 +70,13 @@ test.describe('Filter System', () => {
       await formPage.submit();
       await formPage.waitForSuccess();
     }
-    
+
     // Apply multiple filters
     await filterPanel.open();
     await filterPanel.addFilter('Email', 'contains', baseEmail);
     await filterPanel.addFilter('Email', 'contains', 'admin');
     await filterPanel.apply();
-    
+
     // Should only show users with both patterns
     const rowCount = await listPage.getRowCount();
     expect(rowCount).toBe(2); // Only admin users
@@ -87,16 +87,16 @@ test.describe('Filter System', () => {
     await filterPanel.open();
     await filterPanel.addFilter('Email', 'contains', 'test');
     await filterPanel.apply();
-    
+
     // Verify filter is active
     const hasFilters = await filterPanel.hasActiveFilters();
     expect(hasFilters).toBe(true);
-    
+
     // Clear filters
     await filterPanel.open();
     await filterPanel.clear();
     await filterPanel.apply();
-    
+
     // Verify filters are cleared
     const hasFiltersAfterClear = await filterPanel.hasActiveFilters();
     expect(hasFiltersAfterClear).toBe(false);
@@ -107,18 +107,18 @@ test.describe('Filter System', () => {
     await filterPanel.open();
     await filterPanel.addFilter('Email', 'contains', 'test');
     await filterPanel.addFilter('Name', 'contains', 'user');
-    
+
     // Verify 2 filters exist
     let filterCount = await filterPanel.getFilterCount();
     expect(filterCount).toBe(2);
-    
+
     // Remove first filter
     await filterPanel.removeFilter(0);
-    
+
     // Verify only 1 filter remains
     filterCount = await filterPanel.getFilterCount();
     expect(filterCount).toBe(1);
-    
+
     await filterPanel.apply();
   });
 
@@ -128,7 +128,7 @@ test.describe('Filter System', () => {
     await filterPanel.addFilter('Email', 'contains', 'test');
     await filterPanel.addFilter('Name', 'contains', 'user');
     await filterPanel.apply();
-    
+
     // Check filter count badge
     const activeCount = await filterPanel.getActiveFilterCount();
     expect(activeCount).toBe(2);
@@ -142,7 +142,7 @@ test.describe('Filter System', () => {
       { email: `startswith-${uniqueId}@example.com`, name: 'Starts With' },
       { email: `${uniqueId}-endswith@example.com`, name: 'Ends With' },
     ];
-    
+
     for (const user of users) {
       await listPage.clickCreate();
       await formPage.fillField('Email', user.email);
@@ -150,21 +150,21 @@ test.describe('Filter System', () => {
       await formPage.submit();
       await formPage.waitForSuccess();
     }
-    
+
     // Test starts with operator
     await filterPanel.open();
     await filterPanel.addFilter('Email', 'starts with', 'startswith');
     await filterPanel.apply();
-    
+
     let rowCount = await listPage.getRowCount();
     expect(rowCount).toBe(1);
-    
+
     // Test ends with operator
     await filterPanel.open();
     await filterPanel.clear();
     await filterPanel.addFilter('Email', 'ends with', 'endswith@example.com');
     await filterPanel.apply();
-    
+
     rowCount = await listPage.getRowCount();
     expect(rowCount).toBe(1);
   });
@@ -174,11 +174,11 @@ test.describe('Filter System', () => {
     await filterPanel.open();
     await filterPanel.addFilter('Email', 'contains', 'test');
     await filterPanel.apply();
-    
+
     // Navigate to another model and back
     await adminLayout.navigateToModel('Post');
     await adminLayout.navigateToModel('User');
-    
+
     // Check if filter is still active
     const hasFilters = await filterPanel.hasActiveFilters();
     expect(hasFilters).toBe(true);
@@ -189,7 +189,7 @@ test.describe('Filter System', () => {
     await filterPanel.open();
     await filterPanel.addFilter('Email', 'contains', '');
     await filterPanel.apply();
-    
+
     // Should not crash and should show all results
     const rowCount = await listPage.getRowCount();
     expect(rowCount).toBeGreaterThanOrEqual(0);

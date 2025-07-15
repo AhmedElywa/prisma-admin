@@ -1,8 +1,7 @@
-import { test, expect } from '../../fixtures/test';
-import { ModelListPage } from '../../pages/model-list';
+import { expect, test } from '../../fixtures/test';
 import { FilterPanel } from '../../pages/filter-panel';
-import { TestDataGenerator } from '../../helpers/test-data';
 import { ModelFormPage } from '../../pages/model-form';
+import { ModelListPage } from '../../pages/model-list';
 
 test.describe('String Filter Tests', () => {
   let listPage: ModelListPage;
@@ -13,9 +12,9 @@ test.describe('String Filter Tests', () => {
     listPage = new ModelListPage(page);
     filterPanel = new FilterPanel(page);
     formPage = new ModelFormPage(page);
-    
+
     await page.goto('/admin/user');
-    
+
     // Create test data with various string patterns
     const testUsers = [
       { email: 'admin@example.com', name: 'Admin User' },
@@ -24,7 +23,7 @@ test.describe('String Filter Tests', () => {
       { email: 'jane.smith@company.com', name: 'Jane Smith' },
       { email: 'support@example.org', name: 'Support Team' },
     ];
-    
+
     for (const user of testUsers) {
       await listPage.clickCreate();
       await formPage.fillField('Email', user.email);
@@ -38,11 +37,11 @@ test.describe('String Filter Tests', () => {
     await filterPanel.open();
     await filterPanel.addFilter('Email', 'contains', 'example');
     await filterPanel.apply();
-    
+
     // Verify results
     const rowCount = await listPage.getRowCount();
     expect(rowCount).toBe(3); // admin@example.com, test.user@example.com, support@example.org
-    
+
     // Check all results contain 'example'
     for (let i = 0; i < rowCount; i++) {
       const email = await listPage.getCellContent(i, 'email');
@@ -54,11 +53,11 @@ test.describe('String Filter Tests', () => {
     await filterPanel.open();
     await filterPanel.addFilter('Name', 'starts with', 'J');
     await filterPanel.apply();
-    
+
     // Should find John and Jane
     const rowCount = await listPage.getRowCount();
     expect(rowCount).toBe(2);
-    
+
     for (let i = 0; i < rowCount; i++) {
       const name = await listPage.getCellContent(i, 'name');
       expect(name).toMatch(/^J/);
@@ -69,10 +68,10 @@ test.describe('String Filter Tests', () => {
     await filterPanel.open();
     await filterPanel.addFilter('Email', 'ends with', '.com');
     await filterPanel.apply();
-    
+
     const rowCount = await listPage.getRowCount();
     expect(rowCount).toBe(4); // All except .org
-    
+
     for (let i = 0; i < rowCount; i++) {
       const email = await listPage.getCellContent(i, 'email');
       expect(email).toMatch(/\.com$/);
@@ -83,10 +82,10 @@ test.describe('String Filter Tests', () => {
     await filterPanel.open();
     await filterPanel.addFilter('Email', 'equals', 'admin@example.com');
     await filterPanel.apply();
-    
+
     const rowCount = await listPage.getRowCount();
     expect(rowCount).toBe(1);
-    
+
     const email = await listPage.getCellContent(0, 'email');
     expect(email).toBe('admin@example.com');
   });
@@ -95,10 +94,10 @@ test.describe('String Filter Tests', () => {
     await filterPanel.open();
     await filterPanel.addFilter('Email', 'not equals', 'admin@example.com');
     await filterPanel.apply();
-    
+
     const rowCount = await listPage.getRowCount();
     expect(rowCount).toBe(4); // All except admin
-    
+
     for (let i = 0; i < rowCount; i++) {
       const email = await listPage.getCellContent(i, 'email');
       expect(email).not.toBe('admin@example.com');
@@ -111,14 +110,14 @@ test.describe('String Filter Tests', () => {
     await formPage.fillField('Email', 'noname@example.com');
     await formPage.submit();
     await formPage.waitForSuccess();
-    
+
     await filterPanel.open();
     await filterPanel.addFilter('Name', 'is empty', '');
     await filterPanel.apply();
-    
+
     const rowCount = await listPage.getRowCount();
     expect(rowCount).toBeGreaterThanOrEqual(1);
-    
+
     // Check name is empty
     const name = await listPage.getCellContent(0, 'name');
     expect(name.trim()).toBe('');
@@ -128,9 +127,9 @@ test.describe('String Filter Tests', () => {
     await filterPanel.open();
     await filterPanel.addFilter('Name', 'is not empty', '');
     await filterPanel.apply();
-    
+
     const rowCount = await listPage.getRowCount();
-    
+
     for (let i = 0; i < rowCount; i++) {
       const name = await listPage.getCellContent(i, 'name');
       expect(name.trim()).not.toBe('');
@@ -139,11 +138,11 @@ test.describe('String Filter Tests', () => {
 
   test('should handle case sensitivity', async ({ page }) => {
     await filterPanel.open();
-    
+
     // Test with different case
     await filterPanel.addFilter('Email', 'contains', 'EXAMPLE');
     await filterPanel.apply();
-    
+
     // Should still find results (case-insensitive)
     const rowCount = await listPage.getRowCount();
     expect(rowCount).toBeGreaterThan(0);
@@ -151,15 +150,15 @@ test.describe('String Filter Tests', () => {
 
   test('should combine multiple string filters', async ({ page }) => {
     await filterPanel.open();
-    
+
     // Email contains 'example' AND Name starts with 'A'
     await filterPanel.addFilter('Email', 'contains', 'example');
     await filterPanel.addFilter('Name', 'starts with', 'A');
     await filterPanel.apply();
-    
+
     const rowCount = await listPage.getRowCount();
     expect(rowCount).toBe(1); // Only Admin User
-    
+
     const email = await listPage.getCellContent(0, 'email');
     const name = await listPage.getCellContent(0, 'name');
     expect(email).toContain('example');
@@ -173,14 +172,14 @@ test.describe('String Filter Tests', () => {
     await formPage.fillField('Name', 'User (Special)');
     await formPage.submit();
     await formPage.waitForSuccess();
-    
+
     await filterPanel.open();
     await filterPanel.addFilter('Email', 'contains', '+');
     await filterPanel.apply();
-    
+
     const rowCount = await listPage.getRowCount();
     expect(rowCount).toBe(1);
-    
+
     const email = await listPage.getCellContent(0, 'email');
     expect(email).toContain('+');
   });
@@ -192,11 +191,11 @@ test.describe('String Filter Tests', () => {
     await formPage.fillField('Name', 'Test User');
     await formPage.submit();
     await formPage.waitForSuccess();
-    
+
     await filterPanel.open();
     await filterPanel.addFilter('Email', 'contains', '.');
     await filterPanel.apply();
-    
+
     // Should find users with actual dots, not use . as wildcard
     const rowCount = await listPage.getRowCount();
     for (let i = 0; i < rowCount; i++) {
@@ -209,7 +208,7 @@ test.describe('String Filter Tests', () => {
     await filterPanel.open();
     await filterPanel.addFilter('Email', 'equals', '  admin@example.com  ');
     await filterPanel.apply();
-    
+
     // Should still find the user
     const rowCount = await listPage.getRowCount();
     expect(rowCount).toBe(1);
@@ -219,30 +218,32 @@ test.describe('String Filter Tests', () => {
     await filterPanel.open();
     await filterPanel.addFilter('Email', 'contains', 'company');
     await filterPanel.apply();
-    
+
     // Initial results
     let rowCount = await listPage.getRowCount();
     expect(rowCount).toBe(2); // john and jane
-    
+
     // Modify filter
     await filterPanel.open();
     await filterPanel.removeFilter(0);
     await filterPanel.addFilter('Email', 'contains', 'example');
     await filterPanel.apply();
-    
+
     // Updated results
     rowCount = await listPage.getRowCount();
     expect(rowCount).toBe(3);
   });
 
-  test('should show no results message for non-matching filter', async ({ page }) => {
+  test('should show no results message for non-matching filter', async ({
+    page,
+  }) => {
     await filterPanel.open();
     await filterPanel.addFilter('Email', 'equals', 'nonexistent@example.com');
     await filterPanel.apply();
-    
+
     const rowCount = await listPage.getRowCount();
     expect(rowCount).toBe(0);
-    
+
     // Check for empty state message
     const emptyMessage = page.locator('text=/no.*results|no.*found|empty/i');
     await expect(emptyMessage).toBeVisible();
@@ -252,15 +253,17 @@ test.describe('String Filter Tests', () => {
     await filterPanel.open();
     await filterPanel.addFilter('Email', 'contains', 'example');
     await filterPanel.apply();
-    
+
     // Apply sort
-    const nameHeader = listPage.table.locator('th').filter({ hasText: /name/i });
+    const nameHeader = listPage.table
+      .locator('th')
+      .filter({ hasText: /name/i });
     await nameHeader.click();
-    
+
     // Filter should still be active
     const activeFilters = await filterPanel.hasActiveFilters();
     expect(activeFilters).toBe(true);
-    
+
     // Results should still be filtered
     const rowCount = await listPage.getRowCount();
     for (let i = 0; i < rowCount; i++) {
@@ -273,7 +276,7 @@ test.describe('String Filter Tests', () => {
     await filterPanel.open();
     await filterPanel.addFilter('Email', 'contains', 'company');
     await filterPanel.apply();
-    
+
     // Check if export button respects filters
     if (await listPage.exportButton.isVisible()) {
       // Export functionality should export only filtered results
@@ -291,15 +294,17 @@ test.describe('String Filter Tests', () => {
       await formPage.submit();
       await formPage.waitForSuccess();
     }
-    
+
     await filterPanel.open();
     await filterPanel.addFilter('Email', 'contains', 'example');
     await filterPanel.apply();
-    
+
     // Navigate pages
-    if (await listPage.pagination.getByRole('button', { name: '2' }).isVisible()) {
+    if (
+      await listPage.pagination.getByRole('button', { name: '2' }).isVisible()
+    ) {
       await listPage.goToPage(2);
-      
+
       // Filter should still apply
       const rowCount = await listPage.getRowCount();
       for (let i = 0; i < rowCount; i++) {

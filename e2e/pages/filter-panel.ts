@@ -1,4 +1,4 @@
-import { Page, Locator } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 
 export class FilterPanel {
   readonly page: Page;
@@ -12,7 +12,9 @@ export class FilterPanel {
   constructor(page: Page) {
     this.page = page;
     this.filterButton = page.getByRole('button', { name: /filter/i });
-    this.filterPanel = page.locator('[role="dialog"]').filter({ hasText: /filter/i });
+    this.filterPanel = page
+      .locator('[role="dialog"]')
+      .filter({ hasText: /filter/i });
     this.addFilterButton = page.getByRole('button', { name: /add filter/i });
     this.applyButton = page.getByRole('button', { name: /apply/i });
     this.clearButton = page.getByRole('button', { name: /clear/i });
@@ -31,16 +33,18 @@ export class FilterPanel {
 
   async addFilter(field: string, operator: string, value: string) {
     await this.addFilterButton.click();
-    
+
     // Select field
     const fieldSelect = this.filterPanel.getByRole('combobox').last();
     await fieldSelect.click();
     await this.page.getByRole('option', { name: field }).click();
-    
+
     // Select operator
-    const operatorSelect = this.filterPanel.locator('select').filter({ hasText: operator });
+    const operatorSelect = this.filterPanel
+      .locator('select')
+      .filter({ hasText: operator });
     await operatorSelect.selectOption(operator);
-    
+
     // Enter value
     const valueInput = this.filterPanel.locator('input[type="text"]').last();
     await valueInput.fill(value);
@@ -48,16 +52,18 @@ export class FilterPanel {
 
   async addDateFilter(field: string, operator: string, date: Date) {
     await this.addFilterButton.click();
-    
+
     // Select field
     const fieldSelect = this.filterPanel.getByRole('combobox').last();
     await fieldSelect.click();
     await this.page.getByRole('option', { name: field }).click();
-    
+
     // Select operator
-    const operatorSelect = this.filterPanel.locator('select').filter({ hasText: operator });
+    const operatorSelect = this.filterPanel
+      .locator('select')
+      .filter({ hasText: operator });
     await operatorSelect.selectOption(operator);
-    
+
     // Enter date
     const dateInput = this.filterPanel.locator('input[type="date"]').last();
     const dateStr = date.toISOString().split('T')[0];
@@ -66,12 +72,12 @@ export class FilterPanel {
 
   async addBooleanFilter(field: string, value: boolean) {
     await this.addFilterButton.click();
-    
+
     // Select field
     const fieldSelect = this.filterPanel.getByRole('combobox').last();
     await fieldSelect.click();
     await this.page.getByRole('option', { name: field }).click();
-    
+
     // Select value
     const booleanSelect = this.filterPanel.locator('select').last();
     await booleanSelect.selectOption(value ? 'true' : 'false');
@@ -87,7 +93,9 @@ export class FilterPanel {
   }
 
   async removeFilter(index: number) {
-    const removeButtons = this.filterPanel.locator('button[aria-label="Remove filter"]');
+    const removeButtons = this.filterPanel.locator(
+      'button[aria-label="Remove filter"]'
+    );
     await removeButtons.nth(index).click();
   }
 
@@ -104,7 +112,7 @@ export class FilterPanel {
     const filterBadge = this.filterButton.locator('.badge');
     if (await filterBadge.isVisible()) {
       const text = await filterBadge.textContent();
-      return parseInt(text || '0');
+      return Number.parseInt(text || '0', 10);
     }
     return 0;
   }

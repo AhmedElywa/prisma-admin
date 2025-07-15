@@ -1,10 +1,10 @@
-name: E2E Tests
+name: E2E & Playwright Tests
 
 on:
   push:
-    branches: [main]
+    branches: [main, master]
   pull_request:
-    branches: [main]
+    branches: [main, master]
 
 jobs:
   test:

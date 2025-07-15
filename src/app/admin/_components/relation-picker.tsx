@@ -1,9 +1,8 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { Search, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -11,17 +10,18 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog'
-import { Search, X } from 'lucide-react'
-import { getModelData } from '@/lib/actions/crud'
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { getModelData } from '@/lib/actions/crud';
 
 interface RelationPickerProps {
-  name: string
-  label: string
-  relatedModel: string
-  value?: any
-  required?: boolean
-  disabled?: boolean
+  name: string;
+  label: string;
+  relatedModel: string;
+  value?: any;
+  required?: boolean;
+  disabled?: boolean;
 }
 
 export function RelationPicker({
@@ -32,77 +32,71 @@ export function RelationPicker({
   required = false,
   disabled = false,
 }: RelationPickerProps) {
-  const [isOpen, setIsOpen] = useState(false)
-  const [search, setSearch] = useState('')
-  const [selectedItem, setSelectedItem] = useState<any>(value)
-  const [items, setItems] = useState<any[]>([])
-  const [loading, setLoading] = useState(false)
-  
-  useEffect(() => {
-    if (isOpen) {
-      loadItems()
-    }
-  }, [isOpen, search])
-  
-  
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const [selectedItem, setSelectedItem] = useState<any>(value);
+  const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
   const loadItems = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
       const result = await getModelData(relatedModel, {
         page: 1,
         perPage: 20,
         search,
-      })
-      setItems(result.data)
-    } catch (error) {
-      console.error('Failed to load items:', error)
+      });
+      setItems(result.data);
+    } catch (_error) {
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
-  
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      loadItems();
+    }
+  }, [isOpen, search]);
+
   const selectItem = (item: any) => {
-    setSelectedItem(item)
-    setIsOpen(false)
-  }
-  
+    setSelectedItem(item);
+    setIsOpen(false);
+  };
+
   const clearSelection = () => {
-    setSelectedItem(null)
-  }
-  
+    setSelectedItem(null);
+  };
+
   const getItemDisplay = (item: any) => {
-    if (!item) return 'None'
+    if (!item) {
+      return 'None';
+    }
     // Try common display fields
-    return item.name || item.title || item.email || item.id || 'Unknown'
-  }
-  
+    return item.name || item.title || item.email || item.id || 'Unknown';
+  };
+
   return (
     <div className="space-y-2">
       <Label htmlFor={name}>
         {label}
-        {required && <span className="text-red-500 ml-1">*</span>}
+        {required && <span className="ml-1 text-red-500">*</span>}
       </Label>
-      
-      <input
-        type="hidden"
-        name={name}
-        value={selectedItem?.id || ''}
-      />
-      
+
+      <input name={name} type="hidden" value={selectedItem?.id || ''} />
+
       <div className="flex gap-2">
-        <div className="flex-1 p-2 border rounded-md bg-muted">
+        <div className="flex-1 rounded-md border bg-muted p-2">
           {selectedItem ? (
-            <span className="text-sm">
-              {getItemDisplay(selectedItem)}
-            </span>
+            <span className="text-sm">{getItemDisplay(selectedItem)}</span>
           ) : (
-            <span className="text-sm text-muted-foreground">None selected</span>
+            <span className="text-muted-foreground text-sm">None selected</span>
           )}
         </div>
-        
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+
+        <Dialog onOpenChange={setIsOpen} open={isOpen}>
           <DialogTrigger asChild>
-            <Button type="button" variant="outline" disabled={disabled}>
+            <Button disabled={disabled} type="button" variant="outline">
               Select
             </Button>
           </DialogTrigger>
@@ -113,19 +107,19 @@ export function RelationPicker({
                 Choose a {relatedModel.toLowerCase()} to connect
               </DialogDescription>
             </DialogHeader>
-            
+
             <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <Search className="h-4 w-4 text-muted-foreground" />
                 <Input
+                  className="flex-1"
+                  onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search..."
                   value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="flex-1"
                 />
               </div>
-              
-              <div className="border rounded-md max-h-[400px] overflow-y-auto">
+
+              <div className="max-h-[400px] overflow-y-auto rounded-md border">
                 {loading ? (
                   <div className="p-4 text-center text-muted-foreground">
                     Loading...
@@ -138,17 +132,17 @@ export function RelationPicker({
                   <div className="divide-y">
                     {items.map((item) => (
                       <button
+                        className="flex w-full items-center justify-between p-3 text-left transition-colors hover:bg-accent"
                         key={item.id}
-                        type="button"
                         onClick={() => selectItem(item)}
-                        className="w-full p-3 text-left hover:bg-accent transition-colors flex items-center justify-between"
+                        type="button"
                       >
                         <div>
                           <div className="font-medium">
                             {getItemDisplay(item)}
                           </div>
                           {item.id && (
-                            <div className="text-sm text-muted-foreground">
+                            <div className="text-muted-foreground text-sm">
                               ID: {item.id}
                             </div>
                           )}
@@ -164,19 +158,19 @@ export function RelationPicker({
             </div>
           </DialogContent>
         </Dialog>
-        
+
         {selectedItem && !required && (
           <Button
+            disabled={disabled}
+            onClick={clearSelection}
+            size="icon"
             type="button"
             variant="ghost"
-            size="icon"
-            onClick={clearSelection}
-            disabled={disabled}
           >
             <X className="h-4 w-4" />
           </Button>
         )}
       </div>
     </div>
-  )
+  );
 }

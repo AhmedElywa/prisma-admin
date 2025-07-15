@@ -1,4 +1,4 @@
-import { Page, Locator } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 
 export class ModelListPage {
   readonly page: Page;
@@ -21,7 +21,9 @@ export class ModelListPage {
     this.table = page.locator('table');
     this.tableRows = this.table.locator('tbody tr');
     this.bulkSelectAll = page.locator('th input[type="checkbox"]').first();
-    this.bulkActionsButton = page.getByRole('button', { name: /bulk actions/i });
+    this.bulkActionsButton = page.getByRole('button', {
+      name: /bulk actions/i,
+    });
     this.filterButton = page.getByRole('button', { name: /filter/i });
     this.importButton = page.getByRole('button', { name: /import/i });
     this.exportButton = page.getByRole('button', { name: /export/i });
@@ -63,15 +65,21 @@ export class ModelListPage {
 
   async getCellContent(rowIndex: number, columnName: string): Promise<string> {
     const headers = await this.table.locator('th').allTextContents();
-    const columnIndex = headers.findIndex(h => h.toLowerCase().includes(columnName.toLowerCase()));
-    if (columnIndex === -1) throw new Error(`Column ${columnName} not found`);
-    
+    const columnIndex = headers.findIndex((h) =>
+      h.toLowerCase().includes(columnName.toLowerCase())
+    );
+    if (columnIndex === -1) {
+      throw new Error(`Column ${columnName} not found`);
+    }
+
     const cell = this.tableRows.nth(rowIndex).locator('td').nth(columnIndex);
-    return await cell.textContent() || '';
+    return (await cell.textContent()) || '';
   }
 
   async goToPage(pageNumber: number) {
-    await this.pagination.getByRole('button', { name: pageNumber.toString() }).click();
+    await this.pagination
+      .getByRole('button', { name: pageNumber.toString() })
+      .click();
   }
 
   async clickNext() {

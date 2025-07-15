@@ -4,6 +4,6 @@ const nextConfig = {
   experimental: {
     // Enable experimental features if needed
   },
-}
+};
 
-export default nextConfig
+export default nextConfig;

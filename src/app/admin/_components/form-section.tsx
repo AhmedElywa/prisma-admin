@@ -1,16 +1,22 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { FormField } from './form-field'
-import { AdminField } from '@/lib/admin/types'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import type { AdminField } from '@/lib/admin/types';
+import { FormField } from './form-field';
 
 interface FormSectionProps {
-  title?: string
-  description?: string
+  title?: string;
+  description?: string;
   fields: (AdminField & {
-    inputType: string
-    options?: string[]
-    value?: any
-    relatedModel?: string
-  })[]
+    inputType: string;
+    options?: string[];
+    value?: any;
+    relatedModel?: string;
+  })[];
 }
 
 export function FormSection({ title, description, fields }: FormSectionProps) {
@@ -26,28 +32,27 @@ export function FormSection({ title, description, fields }: FormSectionProps) {
         <div className="grid gap-6 md:grid-cols-2">
           {fields.map((field) => {
             // Full width for certain field types
-            const fullWidth = ['json', 'editor', 'textarea'].includes(field.inputType)
-            
+            const fullWidth = ['json', 'editor', 'textarea'].includes(
+              field.inputType
+            );
+
             return (
-              <div
-                key={field.id}
-                className={fullWidth ? 'md:col-span-2' : ''}
-              >
+              <div className={fullWidth ? 'md:col-span-2' : ''} key={field.id}>
                 <FormField
-                  name={field.name}
-                  label={field.title}
-                  type={field.inputType}
-                  required={field.required}
-                  options={field.options}
                   defaultValue={field.value}
+                  label={field.title}
+                  name={field.name}
+                  options={field.options}
                   placeholder={`Enter ${field.title.toLowerCase()}`}
                   relatedModel={field.relatedModel}
+                  required={field.required}
+                  type={field.inputType}
                 />
               </div>
-            )
+            );
           })}
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

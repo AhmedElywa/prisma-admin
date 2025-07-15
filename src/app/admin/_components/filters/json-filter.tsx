@@ -1,75 +1,85 @@
-'use client'
+'use client';
 
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { BaseFilter } from './base-filter'
-import { FilterConfig, FilterOperator, FilterValue } from './types'
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { BaseFilter } from './base-filter';
+import type { FilterConfig, FilterOperator, FilterValue } from './types';
 
 interface JsonFilterProps {
-  config: FilterConfig
-  value?: FilterValue
-  onChange: (value: FilterValue | null) => void
+  config: FilterConfig;
+  value?: FilterValue;
+  onChange: (value: FilterValue | null) => void;
 }
 
 export function JsonFilter({ config, value, onChange }: JsonFilterProps) {
-  const renderInput = (operator: FilterOperator, value: any, onChange: (value: any) => void) => {
+  const renderInput = (
+    operator: FilterOperator,
+    value: any,
+    onChange: (value: any) => void
+  ) => {
     // For JSON string operations
     if (operator.startsWith('string_')) {
       return (
         <Input
-          type="text"
-          placeholder="Enter text to search in JSON"
-          value={value || ''}
           onChange={(e) => onChange(e.target.value)}
+          placeholder="Enter text to search in JSON"
+          type="text"
+          value={value || ''}
         />
-      )
+      );
     }
-    
+
     // For array operations or equals/not
-    if (operator.startsWith('array_') || operator === 'equals' || operator === 'not') {
+    if (
+      operator.startsWith('array_') ||
+      operator === 'equals' ||
+      operator === 'not'
+    ) {
       return (
         <Textarea
-          placeholder="Enter valid JSON"
-          value={typeof value === 'string' ? value : JSON.stringify(value, null, 2)}
+          className="min-h-[120px] font-mono text-sm"
           onChange={(e) => {
             try {
-              const parsed = JSON.parse(e.target.value)
-              onChange(parsed)
+              const parsed = JSON.parse(e.target.value);
+              onChange(parsed);
             } catch {
               // Keep as string if invalid JSON
-              onChange(e.target.value)
+              onChange(e.target.value);
             }
           }}
-          className="min-h-[120px] font-mono text-sm"
+          placeholder="Enter valid JSON"
+          value={
+            typeof value === 'string' ? value : JSON.stringify(value, null, 2)
+          }
         />
-      )
+      );
     }
-    
+
     // For comparison operators (lt, lte, gt, gte)
     return (
       <Input
-        type="text"
-        placeholder="Enter value for comparison"
-        value={value || ''}
         onChange={(e) => {
           // Try to parse as number first
-          const num = Number(e.target.value)
-          if (!isNaN(num)) {
-            onChange(num)
+          const num = Number(e.target.value);
+          if (Number.isNaN(num)) {
+            onChange(e.target.value);
           } else {
-            onChange(e.target.value)
+            onChange(num);
           }
         }}
+        placeholder="Enter value for comparison"
+        type="text"
+        value={value || ''}
       />
-    )
-  }
-  
+    );
+  };
+
   return (
     <BaseFilter
       config={config}
-      value={value}
       onChange={onChange}
       renderInput={renderInput}
+      value={value}
     />
-  )
+  );
 }

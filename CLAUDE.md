@@ -10,27 +10,32 @@ This is a Next.js 15 admin panel built with React Server Components and Server A
 
 ```bash
 # Development
-npm run dev              # Start development server (http://localhost:3000)
+bun run dev              # Start development server (http://localhost:3000)
 
 # Database Management
-npm run generate         # Generate Prisma client after schema changes
-npm run db:dev          # Run database migrations in development
-npm run db:push         # Push schema changes without migration (dev only)
-npm run db:seed         # Seed database with sample data
+bun run generate         # Generate Prisma client after schema changes
+bun run db:dev          # Run database migrations in development
+bun run db:push         # Push schema changes without migration (dev only)
+bun run db:seed         # Seed database with sample data
 
 # Admin Setup
-npm run generate:settings  # Regenerate admin settings after schema changes
+bun run generate:settings  # Regenerate admin settings after schema changes
 
 # Building & Production
-npm run build           # Create production build
-npm run start           # Start production server
+bun run build           # Create production build
+bun run start           # Start production server
 
 # Code Quality
-npm run lint            # Run ESLint
+bun run lint            # Run Biome check with auto-fix
+bun run lint:check      # Run Biome check without fixes
+bun run format          # Format code with Biome
+bun run format:check    # Check formatting without fixes
+bun run check           # Run all Biome checks with fixes
+bun run check:ci        # Run Biome in CI mode
 
 # Testing
-npm run test:e2e        # Run Playwright E2E tests
-npm run test:e2e:ui     # Run E2E tests with interactive UI
+bun run test:e2e        # Run Playwright E2E tests
+bun run test:e2e:ui     # Run E2E tests with interactive UI
 ```
 
 ## Architecture & Code Structure
@@ -98,11 +103,11 @@ The filter system supports all Prisma operators with type-safe components:
    ```bash
    # 1. Modify prisma/schema.prisma
    # 2. Generate migration
-   npm run db:dev
+   bun run db:dev
    # 3. Generate Prisma client
-   npm run generate
+   bun run generate
    # 4. Regenerate admin settings
-   npm run generate:settings
+   bun run generate:settings
    ```
 
 2. **Adding New Features**:
@@ -114,7 +119,7 @@ The filter system supports all Prisma operators with type-safe components:
 3. **Testing**:
    - E2E tests cover all CRUD operations
    - Test files in `/e2e/` directory
-   - Run specific test: `npx playwright test [filename]`
+   - Run specific test: `bunx playwright test [filename]`
 
 ## Important Notes
 
@@ -123,3 +128,31 @@ The filter system supports all Prisma operators with type-safe components:
 - Prefer Server Components for data fetching
 - Follow the existing filter component patterns for new filter types
 - Maintain type safety throughout the codebase
+
+## Bun Usage Guidelines
+
+This project uses Bun as the JavaScript runtime and package manager. Follow these conventions:
+
+### Package Management
+- Use `bun install` instead of `npm install`, `yarn install`, or `pnpm install`
+- Use `bun add` instead of `npm install` for adding dependencies
+- Use `bun run <script>` instead of `npm run`, `yarn run`, or `pnpm run`
+
+### Runtime
+- Use `bun <file>` instead of `node <file>` or `ts-node <file>`
+- Bun automatically loads .env files, no need for dotenv package
+
+### Testing
+- Use `bun test` for running tests if implementing unit tests
+- Test files should use the `bun:test` import:
+  ```ts
+  import { test, expect } from "bun:test";
+  ```
+
+### Development Scripts
+- For TypeScript execution, use `bun` directly instead of `tsx` where applicable
+- For scripts in package.json, continue using the defined commands with `bun run`
+
+### Build Tools
+- This project uses Next.js build system, so continue using `bun run build`
+- For other build tasks, prefer `bun build` over webpack or esbuild

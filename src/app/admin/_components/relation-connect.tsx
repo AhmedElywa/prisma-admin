@@ -1,24 +1,30 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Search, X, Link, Unlink, Loader2 } from 'lucide-react'
-import { getModelData } from '@/lib/actions/crud'
-import { getModelSettingsData } from '@/lib/actions/form-data'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { cn } from '@/lib/utils'
+import { Link, Loader2, Search, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { getModelData } from '@/lib/actions/crud';
+import { getModelSettingsData } from '@/lib/actions/form-data';
+import { cn } from '@/lib/utils';
 
 interface RelationConnectProps {
-  name: string
-  label: string
-  relatedModel: string
-  value?: any[]
-  modelId: string | number
-  modelName: string
+  name: string;
+  label: string;
+  relatedModel: string;
+  value?: any[];
+  modelId: string | number;
+  modelName: string;
 }
 
 export function RelationConnect({
@@ -29,82 +35,89 @@ export function RelationConnect({
   modelId,
   modelName,
 }: RelationConnectProps) {
-  const [connected, setConnected] = useState<any[]>(value)
-  const [available, setAvailable] = useState<any[]>([])
-  const [search, setSearch] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [modelSettings, setModelSettings] = useState<any>(null)
-  
-  useEffect(() => {
-    loadModelSettings()
-  }, [relatedModel])
-  
-  useEffect(() => {
-    if (modelSettings) {
-      loadAvailable()
-    }
-  }, [search, modelSettings])
-  
+  const [connected, setConnected] = useState<any[]>(value);
+  const [available, setAvailable] = useState<any[]>([]);
+  const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [modelSettings, setModelSettings] = useState<any>(null);
+
   const loadModelSettings = async () => {
     try {
-      const settings = await getModelSettingsData(relatedModel)
-      setModelSettings(settings)
-    } catch (error) {
-      console.error('Failed to load model settings:', error)
-    }
-  }
-  
+      const settings = await getModelSettingsData(relatedModel);
+      setModelSettings(settings);
+    } catch (_error) {}
+  };
+
   const loadAvailable = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
       const result = await getModelData(relatedModel, {
         page: 1,
         perPage: 50,
         search,
-      })
-      
+      });
+
       // Filter out already connected items
-      const connectedIds = connected.map((item: any) => item.id)
-      const filtered = result.data.filter((item: any) => !connectedIds.includes(item.id))
-      setAvailable(filtered)
-    } catch (error) {
-      console.error('Failed to load items:', error)
+      const connectedIds = connected.map((item: any) => item.id);
+      const filtered = result.data.filter(
+        (item: any) => !connectedIds.includes(item.id)
+      );
+      setAvailable(filtered);
+    } catch (_error) {
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
-  
+  };
+
+  useEffect(() => {
+    loadModelSettings();
+  }, []);
+
+  useEffect(() => {
+    if (modelSettings) {
+      loadAvailable();
+    }
+  }, [modelSettings, search, connected]);
+
   const connect = (item: any) => {
-    setConnected([...connected, item])
-    setAvailable(available.filter((a: any) => a.id !== item.id))
-  }
-  
+    setConnected([...connected, item]);
+    setAvailable(available.filter((a: any) => a.id !== item.id));
+  };
+
   const disconnect = (item: any) => {
-    setConnected(connected.filter((c: any) => c.id !== item.id))
-    setAvailable([...available, item].sort((a, b) => {
-      const aDisplay = getItemDisplay(a).toLowerCase()
-      const bDisplay = getItemDisplay(b).toLowerCase()
-      return aDisplay.localeCompare(bDisplay)
-    }))
-  }
-  
+    setConnected(connected.filter((c: any) => c.id !== item.id));
+    setAvailable(
+      [...available, item].sort((a, b) => {
+        const aDisplay = getItemDisplay(a).toLowerCase();
+        const bDisplay = getItemDisplay(b).toLowerCase();
+        return aDisplay.localeCompare(bDisplay);
+      })
+    );
+  };
+
   const getItemDisplay = (item: any) => {
     if (!modelSettings) {
-      return item.name || item.title || item.email || item.id || 'Unknown'
+      return item.name || item.title || item.email || item.id || 'Unknown';
     }
-    
+
     // Use display fields from settings
-    const displayFields = modelSettings.displayFields || ['id']
-    const displayValues = displayFields.map((field: string) => {
-      const value = item[field]
-      if (value === null || value === undefined) return ''
-      if (typeof value === 'object') return JSON.stringify(value)
-      return value
-    }).filter(Boolean)
-    
-    return displayValues.join(' - ') || item.id
-  }
-  
+    const displayFields = modelSettings.displayFields || ['id'];
+    const displayValues = displayFields
+      .map((field: string) => {
+        const value = item[field];
+        if (value === null || value === undefined) {
+          return '';
+        }
+        if (typeof value === 'object') {
+          return JSON.stringify(value);
+        }
+        return value;
+      })
+      .filter(Boolean);
+
+    return displayValues.join(' - ') || item.id;
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -118,55 +131,57 @@ export function RelationConnect({
         {connected.map((item, index) => (
           <input
             key={`${name}-${index}`}
-            type="hidden"
             name={`${name}[${index}]`}
+            type="hidden"
             value={item.id}
           />
         ))}
-        
+
         {/* Connected items */}
         <div>
-          <div className="flex items-center justify-between mb-2">
+          <div className="mb-2 flex items-center justify-between">
             <Label>Connected ({connected.length})</Label>
             {connected.length > 0 && (
               <Button
+                className="text-xs"
+                onClick={() => {
+                  setAvailable(
+                    [...available, ...connected].sort((a, b) => {
+                      const aDisplay = getItemDisplay(a).toLowerCase();
+                      const bDisplay = getItemDisplay(b).toLowerCase();
+                      return aDisplay.localeCompare(bDisplay);
+                    })
+                  );
+                  setConnected([]);
+                }}
+                size="sm"
                 type="button"
                 variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setAvailable([...available, ...connected].sort((a, b) => {
-                    const aDisplay = getItemDisplay(a).toLowerCase()
-                    const bDisplay = getItemDisplay(b).toLowerCase()
-                    return aDisplay.localeCompare(bDisplay)
-                  }))
-                  setConnected([])
-                }}
-                className="text-xs"
               >
                 Disconnect All
               </Button>
             )}
           </div>
-          <div className="border rounded-md p-3 min-h-[100px] bg-muted/30">
+          <div className="min-h-[100px] rounded-md border bg-muted/30 p-3">
             {connected.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">
+              <p className="py-4 text-center text-muted-foreground text-sm">
                 No connected items
               </p>
             ) : (
               <div className="flex flex-wrap gap-2">
-                {connected.map(item => (
-                  <Badge 
-                    key={item.id} 
-                    variant="secondary" 
+                {connected.map((item) => (
+                  <Badge
                     className="gap-1 pr-1 hover:bg-secondary/80"
+                    key={item.id}
+                    variant="secondary"
                   >
                     <span className="max-w-[200px] truncate">
                       {getItemDisplay(item)}
                     </span>
                     <button
-                      type="button"
+                      className="ml-1 rounded p-0.5 transition-colors hover:bg-destructive/20"
                       onClick={() => disconnect(item)}
-                      className="ml-1 hover:bg-destructive/20 rounded p-0.5 transition-colors"
+                      type="button"
                     >
                       <X className="h-3 w-3" />
                     </button>
@@ -176,27 +191,27 @@ export function RelationConnect({
             )}
           </div>
         </div>
-        
+
         {/* Search and available items */}
         <div>
           <Label className="mb-2">Available</Label>
-          <div className="flex items-center gap-2 mb-2">
+          <div className="mb-2 flex items-center gap-2">
             <Search className="h-4 w-4 text-muted-foreground" />
             <Input
+              className="flex-1"
+              onChange={(e) => setSearch(e.target.value)}
               placeholder={`Search ${relatedModel.toLowerCase()}...`}
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="flex-1"
             />
           </div>
-          
-          <ScrollArea className="h-[200px] border rounded-md">
+
+          <ScrollArea className="h-[200px] rounded-md border">
             {loading ? (
-              <div className="flex items-center justify-center h-full">
+              <div className="flex h-full items-center justify-center">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
             ) : available.length === 0 ? (
-              <div className="flex items-center justify-center h-full text-center text-muted-foreground p-4">
+              <div className="flex h-full items-center justify-center p-4 text-center text-muted-foreground">
                 {search ? (
                   <p className="text-sm">No matching items found</p>
                 ) : (
@@ -205,23 +220,23 @@ export function RelationConnect({
               </div>
             ) : (
               <div className="divide-y">
-                {available.map(item => (
+                {available.map((item) => (
                   <div
-                    key={item.id}
                     className={cn(
-                      "p-3 flex items-center justify-between hover:bg-accent transition-colors",
-                      "group cursor-pointer"
+                      'flex items-center justify-between p-3 transition-colors hover:bg-accent',
+                      'group cursor-pointer'
                     )}
+                    key={item.id}
                     onClick={() => connect(item)}
                   >
-                    <span className="text-sm truncate max-w-[300px]">
+                    <span className="max-w-[300px] truncate text-sm">
                       {getItemDisplay(item)}
                     </span>
                     <Button
-                      type="button"
+                      className="opacity-0 transition-opacity group-hover:opacity-100"
                       size="sm"
+                      type="button"
                       variant="ghost"
-                      className="opacity-0 group-hover:opacity-100 transition-opacity"
                     >
                       <Link className="h-4 w-4" />
                     </Button>
@@ -230,14 +245,14 @@ export function RelationConnect({
               </div>
             )}
           </ScrollArea>
-          
+
           {!loading && available.length > 0 && (
-            <p className="text-xs text-muted-foreground mt-2">
+            <p className="mt-2 text-muted-foreground text-xs">
               Click on an item to connect it
             </p>
           )}
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

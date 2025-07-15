@@ -1,146 +1,184 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Upload, FileSpreadsheet, AlertCircle, CheckCircle2, XCircle, Loader2 } from 'lucide-react'
-import { importCSVData } from '@/lib/actions/import'
-import { toast } from 'sonner'
-import { AdminField } from '@/lib/admin/types'
+import {
+  AlertCircle,
+  CheckCircle2,
+  FileSpreadsheet,
+  Loader2,
+  Upload,
+  XCircle,
+} from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { importCSVData } from '@/lib/actions/import';
+import type { AdminField } from '@/lib/admin/types';
 
 interface CSVImportProps {
-  modelName: string
-  fields: AdminField[]
-  onSuccess?: () => void
-  onCancel?: () => void
+  modelName: string;
+  fields: AdminField[];
+  onSuccess?: () => void;
+  onCancel?: () => void;
 }
 
-export function CSVImport({ modelName, fields, onSuccess, onCancel }: CSVImportProps) {
-  const [file, setFile] = useState<File | null>(null)
-  const [csvData, setCsvData] = useState<any[]>([])
-  const [csvHeaders, setCsvHeaders] = useState<string[]>([])
-  const [fieldMappings, setFieldMappings] = useState<Record<string, string>>({})
-  const [skipFirstRow, setSkipFirstRow] = useState(true)
-  const [importing, setImporting] = useState(false)
+export function CSVImport({
+  modelName,
+  fields,
+  onSuccess,
+  onCancel,
+}: CSVImportProps) {
+  const [file, setFile] = useState<File | null>(null);
+  const [csvData, setCsvData] = useState<any[]>([]);
+  const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
+  const [fieldMappings, setFieldMappings] = useState<Record<string, string>>(
+    {}
+  );
+  const [skipFirstRow, setSkipFirstRow] = useState(true);
+  const [importing, setImporting] = useState(false);
   const [importResults, setImportResults] = useState<{
-    success: number
-    failed: number
-    errors: string[]
-  } | null>(null)
+    success: number;
+    failed: number;
+    errors: string[];
+  } | null>(null);
 
   // Get importable fields (exclude relations and computed fields)
-  const importableFields = fields.filter(f => 
-    f.create && 
-    f.kind === 'scalar' && 
-    !f.isId && 
-    !f.relationField
-  )
+  const importableFields = fields.filter(
+    (f) => f.create && f.kind === 'scalar' && !f.isId && !f.relationField
+  );
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0]
-    if (!selectedFile) return
-
-    if (!selectedFile.name.endsWith('.csv')) {
-      toast.error('Please select a CSV file')
-      return
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) {
+      return;
     }
 
-    setFile(selectedFile)
-    
+    if (!selectedFile.name.endsWith('.csv')) {
+      toast.error('Please select a CSV file');
+      return;
+    }
+
+    setFile(selectedFile);
+
     // Read and parse CSV
-    const text = await selectedFile.text()
-    const lines = text.split('\n').filter(line => line.trim())
-    
+    const text = await selectedFile.text();
+    const lines = text.split('\n').filter((line) => line.trim());
+
     if (lines.length === 0) {
-      toast.error('CSV file is empty')
-      return
+      toast.error('CSV file is empty');
+      return;
     }
 
     // Parse headers
-    const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''))
-    setCsvHeaders(headers)
+    const headers = lines[0]
+      .split(',')
+      .map((h) => h.trim().replace(/^"|"$/g, ''));
+    setCsvHeaders(headers);
 
     // Parse data rows (preview first 5)
-    const dataRows = lines.slice(1, 6).map(line => {
-      const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''))
-      return headers.reduce((obj, header, index) => {
-        obj[header] = values[index] || ''
-        return obj
-      }, {} as Record<string, string>)
-    })
-    
-    setCsvData(dataRows)
+    const dataRows = lines.slice(1, 6).map((line) => {
+      const values = line.split(',').map((v) => v.trim().replace(/^"|"$/g, ''));
+      return headers.reduce(
+        (obj, header, index) => {
+          obj[header] = values[index] || '';
+          return obj;
+        },
+        {} as Record<string, string>
+      );
+    });
+
+    setCsvData(dataRows);
 
     // Auto-map fields based on name similarity
-    const mappings: Record<string, string> = {}
-    headers.forEach(header => {
-      const headerLower = header.toLowerCase().replace(/[^a-z0-9]/g, '')
-      const matchedField = importableFields.find(field => {
-        const fieldLower = field.name.toLowerCase()
-        const titleLower = field.title.toLowerCase().replace(/[^a-z0-9]/g, '')
-        return fieldLower === headerLower || titleLower === headerLower
-      })
-      
+    const mappings: Record<string, string> = {};
+    headers.forEach((header) => {
+      const headerLower = header.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const matchedField = importableFields.find((field) => {
+        const fieldLower = field.name.toLowerCase();
+        const titleLower = field.title.toLowerCase().replace(/[^a-z0-9]/g, '');
+        return fieldLower === headerLower || titleLower === headerLower;
+      });
+
       if (matchedField) {
-        mappings[header] = matchedField.name
+        mappings[header] = matchedField.name;
       }
-    })
-    
-    setFieldMappings(mappings)
-  }
+    });
+
+    setFieldMappings(mappings);
+  };
 
   const handleImport = async () => {
-    if (!file) return
+    if (!file) {
+      return;
+    }
 
-    setImporting(true)
-    setImportResults(null)
+    setImporting(true);
+    setImportResults(null);
 
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('modelName', modelName)
-      formData.append('mappings', JSON.stringify(fieldMappings))
-      formData.append('skipFirstRow', skipFirstRow.toString())
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('modelName', modelName);
+      formData.append('mappings', JSON.stringify(fieldMappings));
+      formData.append('skipFirstRow', skipFirstRow.toString());
 
-      const results = await importCSVData(formData)
-      
-      setImportResults(results)
-      
+      const results = await importCSVData(formData);
+
+      setImportResults(results);
+
       if (results.success > 0) {
-        toast.success(`Successfully imported ${results.success} records`)
+        toast.success(`Successfully imported ${results.success} records`);
         if (onSuccess) {
-          setTimeout(onSuccess, 2000)
+          setTimeout(onSuccess, 2000);
         }
       }
-      
+
       if (results.failed > 0) {
-        toast.error(`Failed to import ${results.failed} records`)
+        toast.error(`Failed to import ${results.failed} records`);
       }
-    } catch (error) {
-      console.error('Import failed:', error)
-      toast.error('Failed to import CSV data')
+    } catch (_error) {
+      toast.error('Failed to import CSV data');
     } finally {
-      setImporting(false)
+      setImporting(false);
     }
-  }
+  };
 
   const getMappedFieldTitle = (fieldName: string) => {
-    const field = importableFields.find(f => f.name === fieldName)
-    return field?.title || fieldName
-  }
+    const field = importableFields.find((f) => f.name === fieldName);
+    return field?.title || fieldName;
+  };
 
   const isRequiredFieldMapped = (field: AdminField) => {
-    return Object.values(fieldMappings).includes(field.name)
-  }
+    return Object.values(fieldMappings).includes(field.name);
+  };
 
   const allRequiredFieldsMapped = importableFields
-    .filter(f => f.required)
-    .every(f => isRequiredFieldMapped(f))
+    .filter((f) => f.required)
+    .every((f) => isRequiredFieldMapped(f));
 
   return (
     <Card>
@@ -156,18 +194,18 @@ export function CSVImport({ modelName, fields, onSuccess, onCancel }: CSVImportP
           <Label htmlFor="csv-file">CSV File</Label>
           <div className="flex items-center gap-4">
             <label
+              className="flex cursor-pointer items-center gap-2 rounded-lg border px-4 py-2 hover:bg-muted"
               htmlFor="csv-file"
-              className="flex items-center gap-2 px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted"
             >
               <Upload className="h-4 w-4" />
               {file ? file.name : 'Choose file'}
             </label>
             <input
-              id="csv-file"
-              type="file"
               accept=".csv"
-              onChange={handleFileSelect}
               className="hidden"
+              id="csv-file"
+              onChange={handleFileSelect}
+              type="file"
             />
           </div>
         </div>
@@ -179,24 +217,24 @@ export function CSVImport({ modelName, fields, onSuccess, onCancel }: CSVImportP
             <div className="space-y-4">
               <h3 className="font-medium">Field Mappings</h3>
               <div className="grid gap-4 md:grid-cols-2">
-                {csvHeaders.map(header => (
-                  <div key={header} className="flex items-center gap-2">
+                {csvHeaders.map((header) => (
+                  <div className="flex items-center gap-2" key={header}>
                     <Label className="w-1/3 text-sm">{header}</Label>
                     <Select
-                      value={fieldMappings[header] || ''}
                       onValueChange={(value) => {
-                        setFieldMappings(prev => ({
+                        setFieldMappings((prev) => ({
                           ...prev,
-                          [header]: value
-                        }))
+                          [header]: value,
+                        }));
                       }}
+                      value={fieldMappings[header] || ''}
                     >
                       <SelectTrigger className="flex-1">
                         <SelectValue placeholder="Skip field" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="">Skip field</SelectItem>
-                        {importableFields.map(field => (
+                        {importableFields.map((field) => (
                           <SelectItem key={field.name} value={field.name}>
                             {field.title}
                             {field.required && ' *'}
@@ -214,12 +252,11 @@ export function CSVImport({ modelName, fields, onSuccess, onCancel }: CSVImportP
               <Alert>
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  Missing required fields: {
-                    importableFields
-                      .filter(f => f.required && !isRequiredFieldMapped(f))
-                      .map(f => f.title)
-                      .join(', ')
-                  }
+                  Missing required fields:{' '}
+                  {importableFields
+                    .filter((f) => f.required && !isRequiredFieldMapped(f))
+                    .map((f) => f.title)
+                    .join(', ')}
                 </AlertDescription>
               </Alert>
             )}
@@ -230,22 +267,24 @@ export function CSVImport({ modelName, fields, onSuccess, onCancel }: CSVImportP
                 <h3 className="font-medium">Data Preview</h3>
                 <div className="flex items-center gap-2">
                   <Checkbox
-                    id="skip-header"
                     checked={skipFirstRow}
-                    onCheckedChange={(checked) => setSkipFirstRow(checked as boolean)}
+                    id="skip-header"
+                    onCheckedChange={(checked) =>
+                      setSkipFirstRow(checked as boolean)
+                    }
                   />
-                  <Label htmlFor="skip-header" className="text-sm">
+                  <Label className="text-sm" htmlFor="skip-header">
                     First row contains headers
                   </Label>
                 </div>
               </div>
-              
-              <div className="border rounded-lg overflow-hidden">
+
+              <div className="overflow-hidden rounded-lg border">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      {csvHeaders.map(header => (
-                        <TableHead key={header} className="text-xs">
+                      {csvHeaders.map((header) => (
+                        <TableHead className="text-xs" key={header}>
                           {header}
                           {fieldMappings[header] && (
                             <div className="text-muted-foreground">
@@ -259,8 +298,8 @@ export function CSVImport({ modelName, fields, onSuccess, onCancel }: CSVImportP
                   <TableBody>
                     {csvData.map((row, index) => (
                       <TableRow key={index}>
-                        {csvHeaders.map(header => (
-                          <TableCell key={header} className="text-sm">
+                        {csvHeaders.map((header) => (
+                          <TableCell className="text-sm" key={header}>
                             {row[header]}
                           </TableCell>
                         ))}
@@ -270,12 +309,12 @@ export function CSVImport({ modelName, fields, onSuccess, onCancel }: CSVImportP
                 </Table>
               </div>
               {csvData.length < 5 && (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   Showing all {csvData.length} rows
                 </p>
               )}
               {csvData.length === 5 && (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   Showing first 5 rows of preview
                 </p>
               )}
@@ -303,14 +342,14 @@ export function CSVImport({ modelName, fields, onSuccess, onCancel }: CSVImportP
               </div>
               {importResults.errors.length > 0 && (
                 <div className="mt-2 space-y-1">
-                  <p className="text-sm font-medium">Errors:</p>
-                  <ul className="text-sm text-muted-foreground list-disc list-inside">
+                  <p className="font-medium text-sm">Errors:</p>
+                  <ul className="list-inside list-disc text-muted-foreground text-sm">
                     {importResults.errors.slice(0, 5).map((error, i) => (
                       <li key={i}>{error}</li>
                     ))}
                   </ul>
                   {importResults.errors.length > 5 && (
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-muted-foreground text-sm">
                       ... and {importResults.errors.length - 5} more errors
                     </p>
                   )}
@@ -322,16 +361,12 @@ export function CSVImport({ modelName, fields, onSuccess, onCancel }: CSVImportP
 
         {/* Actions */}
         <div className="flex justify-end gap-2">
-          <Button
-            variant="outline"
-            onClick={onCancel}
-            disabled={importing}
-          >
+          <Button disabled={importing} onClick={onCancel} variant="outline">
             Cancel
           </Button>
           <Button
+            disabled={!(file && allRequiredFieldsMapped) || importing}
             onClick={handleImport}
-            disabled={!file || !allRequiredFieldsMapped || importing}
           >
             {importing ? (
               <>
@@ -348,5 +383,5 @@ export function CSVImport({ modelName, fields, onSuccess, onCancel }: CSVImportP
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

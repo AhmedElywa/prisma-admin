@@ -1,48 +1,51 @@
-'use client'
+'use client';
 
-import { Button } from '@/components/ui/button'
+import { Check, ChevronsUpDown, Database } from 'lucide-react';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 import {
   Command,
-  CommandDialog,
   CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
   CommandList,
-} from '@/components/ui/command'
+} from '@/components/ui/command';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/components/ui/popover'
-import { AdminModel } from '@/lib/admin/types'
-import { Check, ChevronsUpDown, Database } from 'lucide-react'
-import { useState } from 'react'
-import { cn } from '@/lib/utils'
+} from '@/components/ui/popover';
+import type { AdminModel } from '@/lib/admin/types';
+import { cn } from '@/lib/utils';
 
 interface ModelSelectorProps {
-  models: AdminModel[]
-  selectedModel: string | null
-  onSelectModel: (modelId: string) => void
+  models: AdminModel[];
+  selectedModel: string | null;
+  onSelectModel: (modelId: string) => void;
 }
 
-export function ModelSelector({ models, selectedModel, onSelectModel }: ModelSelectorProps) {
-  const [open, setOpen] = useState(false)
-  
-  const selected = models.find(m => m.id === selectedModel)
-  
+export function ModelSelector({
+  models,
+  selectedModel,
+  onSelectModel,
+}: ModelSelectorProps) {
+  const [open, setOpen] = useState(false);
+
+  const selected = models.find((m) => m.id === selectedModel);
+
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover onOpenChange={setOpen} open={open}>
       <PopoverTrigger asChild>
         <Button
-          variant="outline"
-          role="combobox"
           aria-expanded={open}
           className="w-full justify-between"
+          role="combobox"
+          variant="outline"
         >
           <div className="flex items-center">
             <Database className="mr-2 h-4 w-4" />
-            {selected ? selected.name : "Select model..."}
+            {selected ? selected.name : 'Select model...'}
           </div>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
@@ -55,24 +58,25 @@ export function ModelSelector({ models, selectedModel, onSelectModel }: ModelSel
             <CommandGroup>
               {models.map((model) => (
                 <CommandItem
-                  key={model.id}
-                  value={model.name}
                   className="hover:bg-transparent focus:bg-accent"
+                  key={model.id}
                   onSelect={() => {
-                    onSelectModel(model.id)
-                    setOpen(false)
+                    onSelectModel(model.id);
+                    setOpen(false);
                   }}
+                  value={model.name}
                 >
                   <Check
                     className={cn(
-                      "mr-2 h-4 w-4",
-                      selectedModel === model.id ? "opacity-100" : "opacity-0"
+                      'mr-2 h-4 w-4',
+                      selectedModel === model.id ? 'opacity-100' : 'opacity-0'
                     )}
                   />
                   <div className="flex-1">
                     <div className="font-medium">{model.name}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {model.fields.length} fields • {model.displayFields.join(', ')}
+                    <div className="text-muted-foreground text-xs">
+                      {model.fields.length} fields •{' '}
+                      {model.displayFields.join(', ')}
                     </div>
                   </div>
                 </CommandItem>
@@ -82,5 +86,5 @@ export function ModelSelector({ models, selectedModel, onSelectModel }: ModelSel
         </Command>
       </PopoverContent>
     </Popover>
-  )
+  );
 }

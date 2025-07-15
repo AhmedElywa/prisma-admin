@@ -1,25 +1,33 @@
-'use client'
+'use client';
 
-import { useState, useTransition } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
+import {
+  ChevronDown,
+  Copy,
+  Download,
+  FileDown,
+  Loader2,
+  Trash2,
+  X,
+} from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useState, useTransition } from 'react';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { Trash2, Download, ChevronDown, X, Loader2, FileDown, Copy } from 'lucide-react'
-import { toast } from 'sonner'
-import { useRouter } from 'next/navigation'
-import { bulkDeleteRecords, exportRecords } from '@/lib/actions/crud'
+} from '@/components/ui/dropdown-menu';
+import { bulkDeleteRecords, exportRecords } from '@/lib/actions/crud';
 
 interface BulkActionsProps {
-  selectedCount: number
-  selectedIds: (string | number)[]
-  modelName: string
-  onClearSelection: () => void
+  selectedCount: number;
+  selectedIds: (string | number)[];
+  modelName: string;
+  onClearSelection: () => void;
 }
 
 export function BulkActions({
@@ -28,78 +36,87 @@ export function BulkActions({
   modelName,
   onClearSelection,
 }: BulkActionsProps) {
-  const router = useRouter()
-  const [isPending, startTransition] = useTransition()
-  const [isExporting, setIsExporting] = useState(false)
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [isExporting, setIsExporting] = useState(false);
 
   const handleBulkDelete = () => {
-    if (!confirm(`Are you sure you want to delete ${selectedCount} item${selectedCount > 1 ? 's' : ''}?`)) {
-      return
+    if (
+      !confirm(
+        `Are you sure you want to delete ${selectedCount} item${selectedCount > 1 ? 's' : ''}?`
+      )
+    ) {
+      return;
     }
 
     startTransition(async () => {
       try {
-        await bulkDeleteRecords(modelName, selectedIds)
-        toast.success(`Successfully deleted ${selectedCount} item${selectedCount > 1 ? 's' : ''}`)
-        onClearSelection()
-        router.refresh()
-      } catch (error) {
-        console.error('Bulk delete failed:', error)
-        toast.error('Failed to delete selected items')
+        await bulkDeleteRecords(modelName, selectedIds);
+        toast.success(
+          `Successfully deleted ${selectedCount} item${selectedCount > 1 ? 's' : ''}`
+        );
+        onClearSelection();
+        router.refresh();
+      } catch (_error) {
+        toast.error('Failed to delete selected items');
       }
-    })
-  }
+    });
+  };
 
   const handleExport = async (format: 'csv' | 'json') => {
-    setIsExporting(true)
+    setIsExporting(true);
     try {
-      const data = await exportRecords(modelName, selectedIds, format)
-      
+      const data = await exportRecords(modelName, selectedIds, format);
+
       // Create a blob and download it
       const blob = new Blob([data], {
-        type: format === 'csv' ? 'text/csv' : 'application/json'
-      })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `${modelName.toLowerCase()}-export-${new Date().toISOString().split('T')[0]}.${format}`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
-      
-      toast.success(`Exported ${selectedCount} item${selectedCount > 1 ? 's' : ''} as ${format.toUpperCase()}`)
-    } catch (error) {
-      console.error('Export failed:', error)
-      toast.error('Failed to export selected items')
+        type: format === 'csv' ? 'text/csv' : 'application/json',
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${modelName.toLowerCase()}-export-${new Date().toISOString().split('T')[0]}.${format}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      toast.success(
+        `Exported ${selectedCount} item${selectedCount > 1 ? 's' : ''} as ${format.toUpperCase()}`
+      );
+    } catch (_error) {
+      toast.error('Failed to export selected items');
     } finally {
-      setIsExporting(false)
+      setIsExporting(false);
     }
-  }
+  };
 
   const handleCopyIds = () => {
-    const idsText = selectedIds.join(', ')
-    navigator.clipboard.writeText(idsText).then(() => {
-      toast.success('IDs copied to clipboard')
-    }).catch(() => {
-      toast.error('Failed to copy IDs')
-    })
-  }
+    const idsText = selectedIds.join(', ');
+    navigator.clipboard
+      .writeText(idsText)
+      .then(() => {
+        toast.success('IDs copied to clipboard');
+      })
+      .catch(() => {
+        toast.error('Failed to copy IDs');
+      });
+  };
 
   return (
-    <Card className="p-4 bg-muted/50">
+    <Card className="bg-muted/50 p-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <span className="text-sm font-medium">
+          <span className="font-medium text-sm">
             {selectedCount} item{selectedCount > 1 ? 's' : ''} selected
           </span>
-          
+
           <div className="flex items-center gap-2">
             <Button
+              disabled={isPending}
+              onClick={handleBulkDelete}
               size="sm"
               variant="destructive"
-              onClick={handleBulkDelete}
-              disabled={isPending}
             >
               {isPending ? (
                 <>
@@ -113,10 +130,10 @@ export function BulkActions({
                 </>
               )}
             </Button>
-            
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button size="sm" variant="outline" disabled={isExporting}>
+                <Button disabled={isExporting} size="sm" variant="outline">
                   {isExporting ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -149,16 +166,12 @@ export function BulkActions({
             </DropdownMenu>
           </div>
         </div>
-        
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={onClearSelection}
-        >
+
+        <Button onClick={onClearSelection} size="sm" variant="ghost">
           <X className="mr-2 h-4 w-4" />
           Clear selection
         </Button>
       </div>
     </Card>
-  )
+  );
 }

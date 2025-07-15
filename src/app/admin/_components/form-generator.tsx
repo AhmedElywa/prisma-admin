@@ -1,21 +1,20 @@
-import { FormField } from './form-field'
-import { AdminField } from '@/lib/admin/types'
-import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
-import Link from 'next/link'
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import type { AdminField } from '@/lib/admin/types';
+import { FormField } from './form-field';
 
 interface FormGeneratorProps {
   fields: (AdminField & {
-    inputType: string
-    options?: string[]
-    value?: any
-    relatedModel?: string
-  })[]
-  action: (formData: FormData) => Promise<void>
-  modelName: string
-  submitLabel?: string
-  cancelHref: string
-  inModal?: boolean
+    inputType: string;
+    options?: string[];
+    value?: any;
+    relatedModel?: string;
+  })[];
+  action: (formData: FormData) => Promise<void>;
+  modelName: string;
+  submitLabel?: string;
+  cancelHref: string;
+  inModal?: boolean;
 }
 
 export function FormGenerator({
@@ -31,43 +30,49 @@ export function FormGenerator({
       <div className="grid gap-6 md:grid-cols-2">
         {fields.map((field) => {
           // Full width for certain field types
-          const fullWidth = ['json', 'editor', 'textarea', 'richtext', 'file', 'array'].includes(field.inputType)
-          
+          const fullWidth = [
+            'json',
+            'editor',
+            'textarea',
+            'richtext',
+            'file',
+            'array',
+          ].includes(field.inputType);
+
           return (
-            <div
-              key={field.id}
-              className={fullWidth ? 'md:col-span-2' : ''}
-            >
+            <div className={fullWidth ? 'md:col-span-2' : ''} key={field.id}>
               <FormField
-                name={field.name}
-                label={field.title}
-                type={field.inputType}
-                required={field.required}
-                options={field.options}
+                accept={
+                  field.inputType === 'file'
+                    ? 'image/*,application/pdf'
+                    : undefined
+                }
                 defaultValue={field.value}
+                field={field}
+                fieldType={field.type}
+                inModal={inModal}
+                label={field.title}
+                multiple={field.list}
+                name={field.name}
+                options={field.options}
                 placeholder={`Enter ${field.title.toLowerCase()}`}
                 relatedModel={field.relatedModel}
-                accept={field.inputType === 'file' ? 'image/*,application/pdf' : undefined}
-                multiple={field.list}
-                fieldType={field.type}
-                field={field}
-                inModal={inModal}
+                required={field.required}
+                type={field.inputType}
               />
             </div>
-          )
+          );
         })}
       </div>
-      
-      <div className="flex justify-end gap-2 pt-4 border-t">
+
+      <div className="flex justify-end gap-2 border-t pt-4">
         <Link href={cancelHref}>
           <Button type="button" variant="outline">
             Cancel
           </Button>
         </Link>
-        <Button type="submit">
-          {submitLabel}
-        </Button>
+        <Button type="submit">{submitLabel}</Button>
       </div>
     </form>
-  )
+  );
 }

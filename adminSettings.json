@@ -4,10 +4,7 @@
       "id": "User",
       "name": "User",
       "idField": "id",
-      "displayFields": [
-        "name",
-        "email"
-      ],
+      "displayFields": ["name", "email"],
       "create": false,
       "update": true,
       "delete": true,
@@ -85,11 +82,7 @@
             "createable": true,
             "maxDisplay": 10,
             "pageSize": 10,
-            "previewFields": [
-              "id",
-              "name",
-              "title"
-            ]
+            "previewFields": ["id", "name", "title"]
           },
           "relationLoadStrategy": "ondemand"
         },
@@ -225,12 +218,7 @@
             "searchable": true,
             "createable": false,
             "maxDisplay": 1,
-            "previewFields": [
-              "id",
-              "name",
-              "title",
-              "email"
-            ],
+            "previewFields": ["id", "name", "title", "email"],
             "placeholder": "Select..."
           },
           "relationLoadStrategy": "lazy"
@@ -241,9 +229,7 @@
       "id": "Post",
       "name": "Post",
       "idField": "id",
-      "displayFields": [
-        "title"
-      ],
+      "displayFields": ["title"],
       "create": true,
       "update": true,
       "delete": true,
@@ -382,12 +368,7 @@
             "searchable": true,
             "createable": false,
             "maxDisplay": 1,
-            "previewFields": [
-              "id",
-              "name",
-              "title",
-              "email"
-            ],
+            "previewFields": ["id", "name", "title", "email"],
             "placeholder": "Select..."
           },
           "relationLoadStrategy": "lazy"
@@ -446,12 +427,7 @@
             "searchable": true,
             "createable": false,
             "maxDisplay": 1,
-            "previewFields": [
-              "id",
-              "name",
-              "title",
-              "email"
-            ],
+            "previewFields": ["id", "name", "title", "email"],
             "placeholder": "Select..."
           },
           "relationLoadStrategy": "lazy"
@@ -509,11 +485,7 @@
             "createable": true,
             "maxDisplay": 10,
             "pageSize": 10,
-            "previewFields": [
-              "id",
-              "name",
-              "title"
-            ]
+            "previewFields": ["id", "name", "title"]
           },
           "relationLoadStrategy": "ondemand"
         },
@@ -563,10 +535,7 @@
       "id": "Profile",
       "name": "Profile",
       "idField": "id",
-      "displayFields": [
-        "id",
-        "bio"
-      ],
+      "displayFields": ["id", "bio"],
       "create": true,
       "update": true,
       "delete": true,
@@ -665,12 +634,7 @@
             "searchable": true,
             "createable": false,
             "maxDisplay": 1,
-            "previewFields": [
-              "id",
-              "name",
-              "title",
-              "email"
-            ],
+            "previewFields": ["id", "name", "title", "email"],
             "placeholder": "Select..."
           },
           "relationLoadStrategy": "lazy"
@@ -701,9 +665,7 @@
       "id": "Category",
       "name": "Category",
       "idField": "id",
-      "displayFields": [
-        "name"
-      ],
+      "displayFields": ["name"],
       "create": true,
       "update": true,
       "delete": true,
@@ -781,11 +743,7 @@
             "createable": true,
             "maxDisplay": 10,
             "pageSize": 10,
-            "previewFields": [
-              "id",
-              "name",
-              "title"
-            ]
+            "previewFields": ["id", "name", "title"]
           },
           "relationLoadStrategy": "ondemand"
         }
@@ -795,9 +753,7 @@
       "id": "Tag",
       "name": "Tag",
       "idField": "id",
-      "displayFields": [
-        "name"
-      ],
+      "displayFields": ["name"],
       "create": true,
       "update": true,
       "delete": true,
@@ -875,11 +831,7 @@
             "createable": true,
             "maxDisplay": 10,
             "pageSize": 10,
-            "previewFields": [
-              "id",
-              "name",
-              "title"
-            ]
+            "previewFields": ["id", "name", "title"]
           },
           "relationLoadStrategy": "ondemand"
         }
@@ -889,9 +841,7 @@
       "id": "Product",
       "name": "Product",
       "idField": "id",
-      "displayFields": [
-        "id"
-      ],
+      "displayFields": ["id"],
       "create": true,
       "update": true,
       "delete": true,

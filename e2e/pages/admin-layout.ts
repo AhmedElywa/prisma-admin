@@ -1,4 +1,4 @@
-import { Page, Locator } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 
 export class AdminLayout {
   readonly page: Page;
@@ -11,7 +11,9 @@ export class AdminLayout {
   constructor(page: Page) {
     this.page = page;
     this.sidebar = page.locator('nav').first();
-    this.modelLinks = this.sidebar.locator('a[href^="/admin/"]:not([href*="settings"])');
+    this.modelLinks = this.sidebar.locator(
+      'a[href^="/admin/"]:not([href*="settings"])'
+    );
     this.settingsLink = page.getByRole('link', { name: 'Settings' });
     this.pageHeader = page.locator('h1').first();
     this.dashboardLink = page.getByRole('link', { name: 'Dashboard' });
@@ -28,16 +30,18 @@ export class AdminLayout {
   }
 
   async getActiveModel(): Promise<string | null> {
-    const activeLink = await this.sidebar.locator('a[aria-current="page"]').textContent();
+    const activeLink = await this.sidebar
+      .locator('a[aria-current="page"]')
+      .textContent();
     return activeLink;
   }
 
   async getCurrentPageTitle(): Promise<string> {
-    return await this.pageHeader.textContent() || '';
+    return (await this.pageHeader.textContent()) || '';
   }
 
   async getSidebarLinks(): Promise<string[]> {
     const links = await this.sidebar.locator('a').allTextContents();
-    return links.filter(text => text.trim() !== '');
+    return links.filter((text) => text.trim() !== '');
   }
 }

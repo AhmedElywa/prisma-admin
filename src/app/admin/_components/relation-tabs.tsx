@@ -1,11 +1,13 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Plus, Edit, Trash2 } from 'lucide-react'
-import Link from 'next/link'
-import { getModelData, deleteModelRecord } from '@/lib/actions/crud'
-import { getTableFields, getColumnType, getDisplayValue, getModelSettings } from '@/lib/admin/settings'
-import { DataTable } from './data-table'
+import { Plus } from 'lucide-react';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -13,19 +15,26 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog'
-import { InlineCreateForm } from './inline-create-form'
-import { useState } from 'react'
+} from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { getModelData } from '@/lib/actions/crud';
+import {
+  getColumnType,
+  getModelSettings,
+  getTableFields,
+} from '@/lib/admin/settings';
+import { DataTable } from './data-table';
+import { InlineCreateForm } from './inline-create-form';
 
 interface RelationTabsProps {
-  parentModel: string
-  parentId: string | number
+  parentModel: string;
+  parentId: string | number;
   relations: Array<{
-    model: string
-    field: string
-    label: string
-    type: 'one-to-many' | 'many-to-many'
-  }>
+    model: string;
+    field: string;
+    label: string;
+    type: 'one-to-many' | 'many-to-many';
+  }>;
 }
 
 export async function RelationTabs({
@@ -33,48 +42,52 @@ export async function RelationTabs({
   parentId,
   relations,
 }: RelationTabsProps) {
-  if (relations.length === 0) return null
-  
+  if (relations.length === 0) {
+    return null;
+  }
+
   // Load data for each relation
   const relationsWithData = await Promise.all(
     relations.map(async (relation) => {
       try {
         // Get table fields for the related model
-        const fields = await getTableFields(relation.model)
-        
+        const fields = await getTableFields(relation.model);
+
         // Build columns configuration
-        const columns = fields.map(field => ({
+        const columns = fields.map((field) => ({
           key: field.name,
           label: field.title,
           type: getColumnType(field),
-          sortable: field.sort
-        }))
-        
+          sortable: field.sort,
+        }));
+
         // Get the related model to determine the relation field type
-        const relatedModelSettings = await getModelSettings(relation.model)
-        const relationField = relatedModelSettings?.fields.find(f => f.name === relation.field)
-        
+        const relatedModelSettings = await getModelSettings(relation.model);
+        const relationField = relatedModelSettings?.fields.find(
+          (f) => f.name === relation.field
+        );
+
         // Convert parentId based on relation field type
-        let convertedId: any = parentId
+        let convertedId: any = parentId;
         if (relationField?.type === 'Int' || relationField?.type === 'BigInt') {
-          convertedId = parseInt(parentId.toString())
+          convertedId = Number.parseInt(parentId.toString(), 10);
         }
-        
+
         // Get related data
-        const { data, totalCount, page, perPage, totalPages } = await getModelData(
-          relation.model,
-          {
+        const { data, totalCount, page, perPage, totalPages } =
+          await getModelData(relation.model, {
             page: 1,
             perPage: 10,
-            filters: [{
-              field: relation.field,
-              operator: 'equals',
-              value: convertedId,
-              type: 'relation'
-            }]
-          }
-        )
-        
+            filters: [
+              {
+                field: relation.field,
+                operator: 'equals',
+                value: convertedId,
+                type: 'relation',
+              },
+            ],
+          });
+
         return {
           ...relation,
           columns,
@@ -83,9 +96,8 @@ export async function RelationTabs({
           page,
           perPage,
           totalPages,
-        }
-      } catch (error) {
-        console.error(`Failed to load ${relation.model} data:`, error)
+        };
+      } catch (_error) {
         return {
           ...relation,
           columns: [],
@@ -94,21 +106,22 @@ export async function RelationTabs({
           page: 1,
           perPage: 10,
           totalPages: 0,
-        }
+        };
       }
     })
-  )
-  
+  );
+
   if (relations.length === 1) {
     // Single relation - no tabs needed
-    const relation = relationsWithData[0]
+    const relation = relationsWithData[0];
     return (
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle>{relation.label}</CardTitle>
             <CardDescription>
-              {relation.totalCount} related {relation.model.toLowerCase()} record{relation.totalCount !== 1 ? 's' : ''}
+              {relation.totalCount} related {relation.model.toLowerCase()}{' '}
+              record{relation.totalCount !== 1 ? 's' : ''}
             </CardDescription>
           </div>
           <div className="flex gap-2">
@@ -119,14 +132,15 @@ export async function RelationTabs({
                   Quick Add
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+              <DialogContent className="flex max-h-[90vh] max-w-2xl flex-col overflow-hidden">
                 <DialogHeader>
                   <DialogTitle>Add {relation.model}</DialogTitle>
                   <DialogDescription>
-                    Create a new {relation.model.toLowerCase()} linked to this {parentModel.toLowerCase()}
+                    Create a new {relation.model.toLowerCase()} linked to this{' '}
+                    {parentModel.toLowerCase()}
                   </DialogDescription>
                 </DialogHeader>
-                <div className="overflow-y-auto flex-1 pr-2">
+                <div className="flex-1 overflow-y-auto pr-2">
                   <InlineCreateForm
                     modelName={relation.model}
                     parentField={relation.field}
@@ -136,7 +150,9 @@ export async function RelationTabs({
                 </div>
               </DialogContent>
             </Dialog>
-            <Link href={`/admin/${relation.model.toLowerCase()}/new?${relation.field}=${parentId}`}>
+            <Link
+              href={`/admin/${relation.model.toLowerCase()}/new?${relation.field}=${parentId}`}
+            >
               <Button size="sm">
                 <Plus className="mr-2 h-4 w-4" />
                 Add {relation.model}
@@ -146,29 +162,31 @@ export async function RelationTabs({
         </CardHeader>
         <CardContent>
           {relation.totalCount === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
+            <div className="py-8 text-center text-muted-foreground">
               <p>No {relation.model.toLowerCase()} records found</p>
-              <p className="text-sm mt-1">Create your first one using the button above</p>
+              <p className="mt-1 text-sm">
+                Create your first one using the button above
+              </p>
             </div>
           ) : (
             <DataTable
-              data={relation.data}
-              columns={relation.columns}
-              totalItems={relation.totalCount}
-              currentPage={relation.page}
-              itemsPerPage={relation.perPage}
-              totalPages={relation.totalPages}
-              modelName={relation.model}
-              canEdit={true}
               canDelete={true}
+              canEdit={true}
+              columns={relation.columns}
               compact={true}
+              currentPage={relation.page}
+              data={relation.data}
+              itemsPerPage={relation.perPage}
+              modelName={relation.model}
+              totalItems={relation.totalCount}
+              totalPages={relation.totalPages}
             />
           )}
         </CardContent>
       </Card>
-    )
+    );
   }
-  
+
   // Multiple relations - use tabs
   return (
     <Card>
@@ -179,20 +197,25 @@ export async function RelationTabs({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue={relations[0].model} className="w-full">
+        <Tabs className="w-full" defaultValue={relations[0].model}>
           <TabsList className={`grid w-full grid-cols-${relations.length}`}>
-            {relationsWithData.map(relation => (
+            {relationsWithData.map((relation) => (
               <TabsTrigger key={relation.model} value={relation.model}>
                 {relation.label} ({relation.totalCount})
               </TabsTrigger>
             ))}
           </TabsList>
-          
-          {relationsWithData.map(relation => (
-            <TabsContent key={relation.model} value={relation.model} className="mt-4">
-              <div className="flex justify-between items-center mb-4">
-                <p className="text-sm text-muted-foreground">
-                  {relation.totalCount} record{relation.totalCount !== 1 ? 's' : ''}
+
+          {relationsWithData.map((relation) => (
+            <TabsContent
+              className="mt-4"
+              key={relation.model}
+              value={relation.model}
+            >
+              <div className="mb-4 flex items-center justify-between">
+                <p className="text-muted-foreground text-sm">
+                  {relation.totalCount} record
+                  {relation.totalCount !== 1 ? 's' : ''}
                 </p>
                 <div className="flex gap-2">
                   <Dialog>
@@ -206,7 +229,8 @@ export async function RelationTabs({
                       <DialogHeader>
                         <DialogTitle>Add {relation.model}</DialogTitle>
                         <DialogDescription>
-                          Create a new {relation.model.toLowerCase()} linked to this {parentModel.toLowerCase()}
+                          Create a new {relation.model.toLowerCase()} linked to
+                          this {parentModel.toLowerCase()}
                         </DialogDescription>
                       </DialogHeader>
                       <InlineCreateForm
@@ -217,7 +241,9 @@ export async function RelationTabs({
                       />
                     </DialogContent>
                   </Dialog>
-                  <Link href={`/admin/${relation.model.toLowerCase()}/new?${relation.field}=${parentId}`}>
+                  <Link
+                    href={`/admin/${relation.model.toLowerCase()}/new?${relation.field}=${parentId}`}
+                  >
                     <Button size="sm">
                       <Plus className="mr-2 h-4 w-4" />
                       Add {relation.model}
@@ -225,24 +251,26 @@ export async function RelationTabs({
                   </Link>
                 </div>
               </div>
-              
+
               {relation.totalCount === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
+                <div className="py-8 text-center text-muted-foreground">
                   <p>No {relation.model.toLowerCase()} records found</p>
-                  <p className="text-sm mt-1">Create your first one using the button above</p>
+                  <p className="mt-1 text-sm">
+                    Create your first one using the button above
+                  </p>
                 </div>
               ) : (
                 <DataTable
-                  data={relation.data}
-                  columns={relation.columns}
-                  totalItems={relation.totalCount}
-                  currentPage={relation.page}
-                  itemsPerPage={relation.perPage}
-                  totalPages={relation.totalPages}
-                  modelName={relation.model}
-                  canEdit={true}
                   canDelete={true}
+                  canEdit={true}
+                  columns={relation.columns}
                   compact={true}
+                  currentPage={relation.page}
+                  data={relation.data}
+                  itemsPerPage={relation.perPage}
+                  modelName={relation.model}
+                  totalItems={relation.totalCount}
+                  totalPages={relation.totalPages}
                 />
               )}
             </TabsContent>
@@ -250,5 +278,5 @@ export async function RelationTabs({
         </Tabs>
       </CardContent>
     </Card>
-  )
+  );
 }

@@ -1,4 +1,4 @@
-import { Page, Locator } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 
 export class ModelFormPage {
   readonly page: Page;
@@ -11,7 +11,9 @@ export class ModelFormPage {
   constructor(page: Page) {
     this.page = page;
     this.form = page.locator('form');
-    this.submitButton = page.getByRole('button', { name: /save|submit|create|update/i });
+    this.submitButton = page.getByRole('button', {
+      name: /save|submit|create|update/i,
+    });
     this.cancelButton = page.getByRole('button', { name: /cancel/i });
     this.deleteButton = page.getByRole('button', { name: /delete/i });
     this.errorMessages = page.locator('[role="alert"]');
@@ -20,22 +22,26 @@ export class ModelFormPage {
   async fillField(label: string, value: string) {
     // Try to find by role with exact name
     let field = this.page.getByRole('textbox', { name: label });
-    
+
     // If not found, try with asterisk
     if (!(await field.isVisible())) {
       field = this.page.getByRole('textbox', { name: `${label} *` });
     }
-    
+
     // If still not found, try partial match
     if (!(await field.isVisible())) {
       field = this.page.getByRole('textbox').filter({ hasText: label }).first();
     }
-    
+
     // Last resort - use locator
     if (!(await field.isVisible())) {
-      field = this.form.locator(`input[aria-label*="${label}"], textarea[aria-label*="${label}"]`).first();
+      field = this.form
+        .locator(
+          `input[aria-label*="${label}"], textarea[aria-label*="${label}"]`
+        )
+        .first();
     }
-    
+
     await field.fill(value);
   }
 
@@ -45,7 +51,7 @@ export class ModelFormPage {
     await this.page.getByRole('option', { name: value }).click();
   }
 
-  async toggleCheckbox(label: string, check: boolean = true) {
+  async toggleCheckbox(label: string, check = true) {
     const checkbox = this.form.getByLabel(label);
     if (check) {
       await checkbox.check();
@@ -57,7 +63,7 @@ export class ModelFormPage {
   async fillDateField(label: string, date: Date) {
     const field = this.form.getByLabel(label);
     await field.click();
-    
+
     // Format date as YYYY-MM-DD
     const dateStr = date.toISOString().split('T')[0];
     await field.fill(dateStr);
@@ -71,11 +77,11 @@ export class ModelFormPage {
   async connectRelation(label: string, searchTerm: string, optionText: string) {
     const relationField = this.form.getByLabel(label);
     await relationField.click();
-    
+
     // Search in the relation picker
     const searchInput = this.page.getByPlaceholder(/search/i);
     await searchInput.fill(searchTerm);
-    
+
     // Select the option
     await this.page.getByRole('option', { name: optionText }).click();
   }
@@ -115,7 +121,10 @@ export class ModelFormPage {
     // Wait for success toast or redirect
     await Promise.race([
       this.page.waitForURL('**/admin/**', { timeout: 5000 }),
-      this.page.locator('[role="status"]').filter({ hasText: /success/i }).waitFor({ timeout: 5000 })
+      this.page
+        .locator('[role="status"]')
+        .filter({ hasText: /success/i })
+        .waitFor({ timeout: 5000 }),
     ]);
   }
 }

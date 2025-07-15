@@ -1,5 +1,5 @@
-import React from "react";
-import { cn } from "@/lib/utils";
+import type React from 'react';
+import { cn } from '@/lib/utils';
 
 interface PageHeaderProps {
   title: string;
@@ -8,14 +8,19 @@ interface PageHeaderProps {
   className?: string;
 }
 
-export function PageHeader({ title, description, actions, className }: PageHeaderProps) {
+export function PageHeader({
+  title,
+  description,
+  actions,
+  className,
+}: PageHeaderProps) {
   return (
-    <div className={cn("flex items-center justify-between space-y-2", className)}>
+    <div
+      className={cn('flex items-center justify-between space-y-2', className)}
+    >
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">{title}</h2>
-        {description && (
-          <p className="text-muted-foreground">{description}</p>
-        )}
+        <h2 className="font-bold text-3xl tracking-tight">{title}</h2>
+        {description && <p className="text-muted-foreground">{description}</p>}
       </div>
       {actions && <div className="flex items-center space-x-2">{actions}</div>}
     </div>

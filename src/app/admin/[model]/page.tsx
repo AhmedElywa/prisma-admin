@@ -1,63 +1,68 @@
-import { notFound } from 'next/navigation'
-import { DataTable } from '@/app/admin/_components/data-table'
-import { ModelHeaderActions } from '@/app/admin/_components/model-header-actions'
-import { 
-  getModelSettings, 
-  getTableFields,
+import { notFound } from 'next/navigation';
+import { DataTable } from '@/app/admin/_components/data-table';
+import type {
+  FilterConfig,
+  FilterValue,
+} from '@/app/admin/_components/filters/types';
+import { ModelHeaderActions } from '@/app/admin/_components/model-header-actions';
+import { getModelData } from '@/lib/actions/crud';
+import { getRelationFilterFields } from '@/lib/actions/filter-actions';
+import {
   canCreateModel,
   canDeleteModel,
+  getAdminSettings,
   getColumnType,
   getFilterableFields,
-  getAdminSettings
-} from '@/lib/admin/settings'
-import { getModelData } from '@/lib/actions/crud'
-import { getRelationFilterFields } from '@/lib/actions/filter-actions'
-import { FilterConfig, FilterValue } from '@/app/admin/_components/filters/types'
+  getModelSettings,
+  getTableFields,
+} from '@/lib/admin/settings';
 
-export async function generateMetadata({ 
-  params 
-}: { 
-  params: Promise<{ model: string }> 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ model: string }>;
 }) {
-  const { model } = await params
-  const modelSettings = await getModelSettings(model)
-  if (!modelSettings) return { title: 'Not Found' }
-  
+  const { model } = await params;
+  const modelSettings = await getModelSettings(model);
+  if (!modelSettings) {
+    return { title: 'Not Found' };
+  }
+
   return {
     title: `${modelSettings.name} - Admin`,
-  }
+  };
 }
 
 export default async function ModelListPage({
   params,
   searchParams,
 }: {
-  params: Promise<{ model: string }>
-  searchParams: Promise<{ 
-    page?: string
-    search?: string
-    sort?: string
-    order?: 'asc' | 'desc'
-    filters?: string
-  }>
+  params: Promise<{ model: string }>;
+  searchParams: Promise<{
+    page?: string;
+    search?: string;
+    sort?: string;
+    order?: 'asc' | 'desc';
+    filters?: string;
+  }>;
 }) {
-  const { model } = await params
-  const search = await searchParams
-  const modelName = model.charAt(0).toUpperCase() + model.slice(1)
-  const modelSettings = await getModelSettings(modelName)
-  
+  const { model } = await params;
+  const search = await searchParams;
+  const modelName = model.charAt(0).toUpperCase() + model.slice(1);
+  const modelSettings = await getModelSettings(modelName);
+
   if (!modelSettings) {
-    notFound()
+    notFound();
   }
-  
+
   // Get table fields from settings
-  const fields = await getTableFields(modelName)
-  
+  const fields = await getTableFields(modelName);
+
   // Get filterable fields
-  const filterableFields = await getFilterableFields(modelName)
-  
+  const filterableFields = await getFilterableFields(modelName);
+
   // Build columns configuration
-  const columns = fields.map(field => ({
+  const columns = fields.map((field) => ({
     key: field.name,
     label: field.title,
     type: getColumnType(field),
@@ -66,73 +71,71 @@ export default async function ModelListPage({
     relationTo: field.type, // The related model name
     relationFrom: field.relationFrom, // The foreign key field
     isList: field.list, // Whether it's a one-to-many relation
-    field: field // Pass full field metadata for relations
-  }))
-  
+    field, // Pass full field metadata for relations
+  }));
+
   // Parse filters from URL
-  const filters: FilterValue[] = search.filters 
+  const filters: FilterValue[] = search.filters
     ? JSON.parse(decodeURIComponent(search.filters))
-    : []
-  
+    : [];
+
   // Build filter configs
-  const settings = await getAdminSettings()
-  const filterConfigs: FilterConfig[] = filterableFields.map(field => ({
+  const settings = await getAdminSettings();
+  const filterConfigs: FilterConfig[] = filterableFields.map((field) => ({
     field: field.name,
     label: field.title,
     type: field.type,
     kind: field.kind,
     list: field.list,
     relationTo: field.relationFrom,
-    enumValues: field.kind === 'enum' 
-      ? settings.enums.find(e => e.name === field.type)?.fields
-      : undefined
-  }))
-  
+    enumValues:
+      field.kind === 'enum'
+        ? settings.enums.find((e) => e.name === field.type)?.fields
+        : undefined,
+  }));
+
   // Get data with pagination and filters
-  const { 
-    data, 
-    totalCount, 
-    page, 
-    perPage, 
-    totalPages 
-  } = await getModelData(modelName, {
-    page: parseInt(search.page || '1'),
-    perPage: 10,
-    orderBy: search.sort,
-    order: search.order,
-    search: search.search,
-    filters: filters.length > 0 ? filters : undefined
-  })
-  
-  const canCreate = await canCreateModel(modelName)
-  const canDelete = await canDeleteModel(modelName)
-  
+  const { data, totalCount, page, perPage, totalPages } = await getModelData(
+    modelName,
+    {
+      page: Number.parseInt(search.page || '1', 10),
+      perPage: 10,
+      orderBy: search.sort,
+      order: search.order,
+      search: search.search,
+      filters: filters.length > 0 ? filters : undefined,
+    }
+  );
+
+  const canCreate = await canCreateModel(modelName);
+  const canDelete = await canDeleteModel(modelName);
+
   return (
     <div className="container mx-auto py-10">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">{modelSettings.name}</h1>
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="font-bold text-3xl">{modelSettings.name}</h1>
         <ModelHeaderActions
-          modelName={modelName}
-          modelPath={model}
           canCreate={canCreate}
           fields={modelSettings.fields}
+          modelName={modelName}
+          modelPath={model}
         />
       </div>
-      
+
       <DataTable
-        data={data}
-        columns={columns}
-        totalItems={totalCount}
-        currentPage={page}
-        itemsPerPage={perPage}
-        totalPages={totalPages}
-        searchValue={search.search}
-        modelName={modelName}
-        canEdit={modelSettings.update}
         canDelete={canDelete}
+        canEdit={modelSettings.update}
+        columns={columns}
+        currentPage={page}
+        data={data}
         filterFields={filterConfigs}
         getRelationFields={getRelationFilterFields}
+        itemsPerPage={perPage}
+        modelName={modelName}
+        searchValue={search.search}
+        totalItems={totalCount}
+        totalPages={totalPages}
       />
     </div>
-  )
+  );
 }
