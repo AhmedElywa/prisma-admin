@@ -123,7 +123,7 @@ export function RelationCount({
             variant="ghost"
           >
             <span className="font-medium">{count}</span>
-            <span className="ml-1 text-muted-foreground">
+            <span className="ms-1 text-muted-foreground">
               {field.title || field.name}
             </span>
           </Button>

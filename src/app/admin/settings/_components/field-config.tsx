@@ -151,7 +151,7 @@ export function FieldConfig({
             <div className="space-y-2">
               <Label>Permissions</Label>
               <div className="flex flex-wrap gap-4 rounded-md border px-3 py-2">
-                <label className="flex items-center space-x-2">
+                <label className="flex items-center gap-2">
                   <Checkbox
                     checked={selectedField.read}
                     onCheckedChange={(checked) =>
@@ -160,7 +160,7 @@ export function FieldConfig({
                   />
                   <span className="text-sm">Read</span>
                 </label>
-                <label className="flex items-center space-x-2">
+                <label className="flex items-center gap-2">
                   <Checkbox
                     checked={selectedField.create}
                     disabled={selectedField.isId || selectedField.relationField}
@@ -170,7 +170,7 @@ export function FieldConfig({
                   />
                   <span className="text-sm">Create</span>
                 </label>
-                <label className="flex items-center space-x-2">
+                <label className="flex items-center gap-2">
                   <Checkbox
                     checked={selectedField.update}
                     disabled={selectedField.isId || selectedField.relationField}
@@ -180,7 +180,7 @@ export function FieldConfig({
                   />
                   <span className="text-sm">Update</span>
                 </label>
-                <label className="flex items-center space-x-2">
+                <label className="flex items-center gap-2">
                   <Checkbox
                     checked={selectedField.filter}
                     onCheckedChange={(checked) =>
@@ -189,7 +189,7 @@ export function FieldConfig({
                   />
                   <span className="text-sm">Filter</span>
                 </label>
-                <label className="flex items-center space-x-2">
+                <label className="flex items-center gap-2">
                   <Checkbox
                     checked={selectedField.sort}
                     disabled={selectedField.list || selectedField.relationField}
@@ -214,7 +214,7 @@ export function FieldConfig({
               <div className="space-y-3">
                 <h3 className="font-medium">Field Input Type</h3>
                 <div className="space-y-2">
-                  <label className="flex cursor-pointer items-center space-x-2">
+                  <label className="flex cursor-pointer items-center gap-2">
                     <input
                       checked={!(selectedField.editor || selectedField.upload)}
                       className="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
@@ -229,7 +229,7 @@ export function FieldConfig({
                     />
                     <span className="text-sm">Standard Text Input</span>
                   </label>
-                  <label className="flex cursor-pointer items-center space-x-2">
+                  <label className="flex cursor-pointer items-center gap-2">
                     <input
                       checked={selectedField.editor === true}
                       className="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
@@ -244,7 +244,7 @@ export function FieldConfig({
                     />
                     <span className="text-sm">Rich Text Editor</span>
                   </label>
-                  <label className="flex cursor-pointer items-center space-x-2">
+                  <label className="flex cursor-pointer items-center gap-2">
                     <input
                       checked={selectedField.upload === true}
                       className="h-4 w-4 border-gray-300 text-primary focus:ring-primary"

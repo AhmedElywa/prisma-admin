@@ -120,12 +120,12 @@ export function BulkActions({
             >
               {isPending ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="me-2 h-4 w-4 animate-spin" />
                   Deleting...
                 </>
               ) : (
                 <>
-                  <Trash2 className="mr-2 h-4 w-4" />
+                  <Trash2 className="me-2 h-4 w-4" />
                   Delete
                 </>
               )}
@@ -136,30 +136,30 @@ export function BulkActions({
                 <Button disabled={isExporting} size="sm" variant="outline">
                   {isExporting ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <Loader2 className="me-2 h-4 w-4 animate-spin" />
                       Exporting...
                     </>
                   ) : (
                     <>
-                      <Download className="mr-2 h-4 w-4" />
+                      <Download className="me-2 h-4 w-4 rtl:scale-x-[-1]" />
                       Export
-                      <ChevronDown className="ml-1 h-3 w-3" />
+                      <ChevronDown className="ms-1 h-3 w-3 rtl:scale-x-[-1]" />
                     </>
                   )}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
                 <DropdownMenuItem onClick={() => handleExport('csv')}>
-                  <FileDown className="mr-2 h-4 w-4" />
+                  <FileDown className="me-2 h-4 w-4 rtl:scale-x-[-1]" />
                   Export as CSV
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleExport('json')}>
-                  <FileDown className="mr-2 h-4 w-4" />
+                  <FileDown className="me-2 h-4 w-4 rtl:scale-x-[-1]" />
                   Export as JSON
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleCopyIds}>
-                  <Copy className="mr-2 h-4 w-4" />
+                  <Copy className="me-2 h-4 w-4" />
                   Copy IDs
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -168,7 +168,7 @@ export function BulkActions({
         </div>
 
         <Button onClick={onClearSelection} size="sm" variant="ghost">
-          <X className="mr-2 h-4 w-4" />
+          <X className="me-2 h-4 w-4" />
           Clear selection
         </Button>
       </div>

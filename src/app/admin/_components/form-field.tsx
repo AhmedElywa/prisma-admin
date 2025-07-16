@@ -87,7 +87,7 @@ const FieldWrapper = ({
   <div className="space-y-2">
     <Label htmlFor={name}>
       {label}
-      {required && <span className="ml-1 text-red-500">*</span>}
+      {required && <span className="ms-1 text-red-500">*</span>}
     </Label>
     {children}
   </div>
@@ -129,7 +129,7 @@ const InputField = ({
 
 // Helper components for specific field types
 const BooleanField = ({ name, label, defaultValue, disabled }: any) => (
-  <div className="flex items-center space-x-2">
+  <div className="flex items-center gap-2">
     <Checkbox
       defaultChecked={defaultValue === true}
       disabled={disabled}
@@ -155,7 +155,7 @@ const SelectField = ({
   <div className="space-y-2">
     <Label htmlFor={name}>
       {label}
-      {required && <span className="ml-1 text-red-500">*</span>}
+      {required && <span className="ms-1 text-red-500">*</span>}
     </Label>
     <Select
       defaultValue={defaultValue?.toString()}

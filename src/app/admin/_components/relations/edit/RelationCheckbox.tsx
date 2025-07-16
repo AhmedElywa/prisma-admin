@@ -109,7 +109,7 @@ export function RelationCheckbox({
         <Label>{label}</Label>
         <div className="flex items-center justify-center py-4">
           <Loader2 className="h-4 w-4 animate-spin" />
-          <span className="ml-2 text-muted-foreground text-sm">
+          <span className="ms-2 text-muted-foreground text-sm">
             Loading options...
           </span>
         </div>
@@ -130,7 +130,7 @@ export function RelationCheckbox({
     <div className="space-y-2">
       <Label>
         {label}
-        {required && <span className="ml-1 text-red-500">*</span>}
+        {required && <span className="ms-1 text-red-500">*</span>}
       </Label>
 
       <div className="max-h-[300px] space-y-2 overflow-y-auto rounded-md border p-3">
@@ -140,7 +140,7 @@ export function RelationCheckbox({
           const isChecked = selectedIds.has(optionId);
 
           return (
-            <div className="flex items-center space-x-2" key={optionId}>
+            <div className="flex items-center gap-2" key={optionId}>
               <Checkbox
                 checked={isChecked}
                 disabled={disabled}

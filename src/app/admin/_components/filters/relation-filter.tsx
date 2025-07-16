@@ -99,9 +99,9 @@ export function RelationFilter({
             type="button"
           >
             {isExpanded ? (
-              <ChevronDown className="h-4 w-4" />
+              <ChevronDown className="h-4 w-4 rtl:scale-x-[-1]" />
             ) : (
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-4 w-4 rtl:scale-x-[-1]" />
             )}
             {config.label}
           </button>
@@ -111,7 +111,7 @@ export function RelationFilter({
             size="icon"
             variant="ghost"
           >
-            <X className="h-3 w-3" />
+            <X className="h-3 w-3 rtl:scale-x-[-1]" />
           </Button>
         </div>
 
@@ -137,7 +137,7 @@ export function RelationFilter({
         </Select>
 
         {isExpanded && (
-          <div className="ml-4 space-y-2 border-l-2 pl-4">
+          <div className="ms-4 space-y-2 border-s-2 ps-4">
             <FilterGroup
               fields={relationFields}
               filters={nestedFilters}

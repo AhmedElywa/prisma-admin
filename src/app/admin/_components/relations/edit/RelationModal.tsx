@@ -67,7 +67,7 @@ export function RelationModal({
     <div className="space-y-2">
       <Label htmlFor={name}>
         {label}
-        {required && <span className="ml-1 text-red-500">*</span>}
+        {required && <span className="ms-1 text-red-500">*</span>}
       </Label>
 
       <div className="flex items-center gap-2">
@@ -88,7 +88,7 @@ export function RelationModal({
           type="button"
           variant="outline"
         >
-          <Edit className="mr-1 h-4 w-4" />
+          <Edit className="me-1 h-4 w-4" />
           {displayValue ? 'Change' : 'Select'}
         </Button>
       </div>

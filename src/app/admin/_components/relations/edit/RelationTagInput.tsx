@@ -137,7 +137,7 @@ export function RelationTagInput({
     <div className="space-y-2">
       <Label htmlFor={name}>
         {label}
-        {required && <span className="ml-1 text-red-500">*</span>}
+        {required && <span className="ms-1 text-red-500">*</span>}
       </Label>
 
       <div className="space-y-2">
@@ -148,7 +148,7 @@ export function RelationTagInput({
               {getDisplayValue(item)}
               {!disabled && (
                 <button
-                  className="ml-1 hover:text-destructive"
+                  className="ms-1 hover:text-destructive"
                   onClick={() => removeItem(item)}
                   type="button"
                 >
@@ -167,7 +167,7 @@ export function RelationTagInput({
           <Popover onOpenChange={setOpen} open={open}>
             <PopoverTrigger asChild>
               <Button className="h-8" size="sm" type="button" variant="outline">
-                <Plus className="mr-1 h-4 w-4" />
+                <Plus className="me-1 h-4 w-4" />
                 Add {label}
               </Button>
             </PopoverTrigger>
@@ -199,7 +199,7 @@ export function RelationTagInput({
                       >
                         <div
                           className={cn(
-                            'mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary',
+                            'me-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary',
                             isSelected
                               ? 'bg-primary text-primary-foreground'
                               : 'opacity-50 [&_svg]:invisible'

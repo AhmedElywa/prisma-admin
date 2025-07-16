@@ -131,11 +131,11 @@ const ActiveFilters = ({
           >
             <span className="text-xs">{getFilterLabel(filter)}</span>
             <button
-              className="ml-1 hover:text-destructive"
+              className="ms-1 hover:text-destructive"
               onClick={() => onRemoveFilter(index)}
               type="button"
             >
-              <X className="h-3 w-3" />
+              <X className="h-3 w-3 rtl:scale-x-[-1]" />
             </button>
           </Badge>
         ))}
@@ -230,10 +230,10 @@ export function FilterPanel({
       >
         <SheetTrigger asChild>
           <Button size="sm" variant="outline">
-            <Filter className="mr-2 h-4 w-4" />
+            <Filter className="me-2 h-4 w-4 rtl:scale-x-[-1]" />
             Filters
             {currentFilters.length > 0 && (
-              <Badge className="ml-2" variant="secondary">
+              <Badge className="ms-2" variant="secondary">
                 {currentFilters.length}
               </Badge>
             )}

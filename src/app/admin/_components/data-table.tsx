@@ -440,9 +440,9 @@ export function DataTable<T extends DataRecord = DataRecord>({
           onSubmit={handleSearch}
         >
           <div className="relative flex-1">
-            <Search className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 text-muted-foreground" />
+            <Search className="-translate-y-1/2 absolute start-3 top-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              className="pl-9"
+              className="ps-9"
               onChange={(e) => setSearch(e.target.value)}
               placeholder={searchPlaceholder}
               value={search}
@@ -488,12 +488,12 @@ export function DataTable<T extends DataRecord = DataRecord>({
                 <TableHead key={column.key}>
                   {column.sortable ? (
                     <Button
-                      className="-ml-3 h-8 data-[state=open]:bg-accent"
+                      className="-ms-3 h-8 data-[state=open]:bg-accent"
                       onClick={() => handleSort(column.key)}
                       variant="ghost"
                     >
                       <span>{column.label}</span>
-                      <span className="ml-2">{renderSortIcon(column.key)}</span>
+                      <span className="ms-2">{renderSortIcon(column.key)}</span>
                     </Button>
                   ) : (
                     column.label
@@ -573,7 +573,7 @@ export function DataTable<T extends DataRecord = DataRecord>({
               size="icon"
               variant="outline"
             >
-              <ChevronsLeft className="h-4 w-4" />
+              <ChevronsLeft className="h-4 w-4 rtl:scale-x-[-1]" />
             </Button>
             <Button
               disabled={currentPage === 1}
@@ -581,7 +581,7 @@ export function DataTable<T extends DataRecord = DataRecord>({
               size="icon"
               variant="outline"
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-4 w-4 rtl:scale-x-[-1]" />
             </Button>
 
             <span className="text-sm">
@@ -594,7 +594,7 @@ export function DataTable<T extends DataRecord = DataRecord>({
               size="icon"
               variant="outline"
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-4 w-4 rtl:scale-x-[-1]" />
             </Button>
             <Button
               disabled={currentPage === totalPages}
@@ -602,7 +602,7 @@ export function DataTable<T extends DataRecord = DataRecord>({
               size="icon"
               variant="outline"
             >
-              <ChevronsRight className="h-4 w-4" />
+              <ChevronsRight className="h-4 w-4 rtl:scale-x-[-1]" />
             </Button>
           </div>
         </div>
