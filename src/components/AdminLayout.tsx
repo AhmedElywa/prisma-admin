@@ -79,11 +79,13 @@ export function AdminLayout({ children, models }: AdminLayoutProps) {
         {/* Navigation */}
         <nav className="flex-1 space-y-1 p-3">
           <Link
+            aria-current={pathname === '/admin' ? 'page' : undefined}
             className={cn(
               'flex items-center gap-3 rounded-lg px-3 py-2 transition-colors',
               'hover:bg-accent hover:text-accent-foreground',
               pathname === '/admin' && 'bg-accent text-accent-foreground'
             )}
+            data-testid="nav-link-dashboard"
             href="/admin"
           >
             <LayoutDashboard className="h-5 w-5 shrink-0" />
@@ -100,13 +102,17 @@ export function AdminLayout({ children, models }: AdminLayoutProps) {
 
           {models.map((model) => {
             const href = `/admin/${model.id.toLowerCase()}`;
+            const isActive =
+              pathname === href || pathname.startsWith(`${href}/`);
             return (
               <Link
+                aria-current={isActive ? 'page' : undefined}
                 className={cn(
                   'flex items-center gap-3 rounded-lg px-3 py-2 transition-colors',
                   'hover:bg-accent hover:text-accent-foreground',
-                  pathname === href && 'bg-accent text-accent-foreground'
+                  isActive && 'bg-accent text-accent-foreground'
                 )}
+                data-testid={`nav-link-${model.id.toLowerCase()}`}
                 href={href}
                 key={model.id}
               >
@@ -118,12 +124,16 @@ export function AdminLayout({ children, models }: AdminLayoutProps) {
 
           <div className="pt-4">
             <Link
+              aria-current={
+                pathname.startsWith('/admin/settings') ? 'page' : undefined
+              }
               className={cn(
                 'flex items-center gap-3 rounded-lg px-3 py-2 transition-colors',
                 'hover:bg-accent hover:text-accent-foreground',
-                pathname === '/admin/settings' &&
+                pathname.startsWith('/admin/settings') &&
                   'bg-accent text-accent-foreground'
               )}
+              data-testid="nav-link-settings"
               href="/admin/settings"
             >
               <Settings className="h-5 w-5 shrink-0" />
@@ -304,13 +314,16 @@ function MobileNav({
 
         {models.map((model) => {
           const href = `/admin/${model.id.toLowerCase()}`;
+          const isActive = pathname === href || pathname.startsWith(`${href}/`);
           return (
             <Link
+              aria-current={isActive ? 'page' : undefined}
               className={cn(
                 'flex items-center gap-3 rounded-lg px-3 py-2 transition-colors',
                 'hover:bg-accent hover:text-accent-foreground',
-                pathname === href && 'bg-accent text-accent-foreground'
+                isActive && 'bg-accent text-accent-foreground'
               )}
+              data-testid={`nav-link-${model.id.toLowerCase()}`}
               href={href}
               key={model.id}
             >

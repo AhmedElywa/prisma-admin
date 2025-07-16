@@ -6,8 +6,10 @@ This document details the filter system components in `src/app/admin/_components
 - `types.ts` - Filter type definitions
 - `filter-builder.ts` - Prisma where clause builder
 - `filter-panel.tsx` - Main filter UI panel
+- `advanced-filter-panel.tsx` - Enhanced filter panel with sections
 - `filter-field.tsx` - Individual filter field
 - `filter-value-input.tsx` - Value input components
+- `date-picker.tsx` - Date input wrapper
 
 ## 1. types.ts - Filter Type System
 
@@ -331,6 +333,76 @@ Complex array operations:
 2. **Debounced updates**: Prevents excessive rerenders
 3. **Async relation loading**: Only loads when needed
 4. **Memoized operators**: Computed once per type
+
+## 6. advanced-filter-panel.tsx - Enhanced Filter Panel
+
+### Features
+
+#### Sectioned Filter UI
+Separates filters into two distinct sections:
+- **Relation Filters**: Filters on related models
+- **Field Filters**: Filters on scalar fields
+
+#### Component Structure
+```typescript
+interface AdvancedFilterPanelProps {
+  fields: FilterConfig[]
+  modelName: string
+  getRelationFields?: (model: string) => Promise<FilterConfig[]>
+}
+```
+
+#### Benefits Over Standard Panel
+- Better organization for complex models
+- Clear separation of concerns
+- Improved discoverability
+- Reduced cognitive load
+
+### Implementation Details
+
+```typescript
+// Separate fields by type
+const relationFields = fields.filter(f => f.relationTo)
+const scalarFields = fields.filter(f => !f.relationTo)
+
+// Render in tabs or sections
+<Tabs>
+  <TabsList>
+    <TabsTrigger>Relations ({relationFilters.length})</TabsTrigger>
+    <TabsTrigger>Fields ({fieldFilters.length})</TabsTrigger>
+  </TabsList>
+  <TabsContent>
+    {/* Relation filters */}
+  </TabsContent>
+  <TabsContent>
+    {/* Field filters */}
+  </TabsContent>
+</Tabs>
+```
+
+## 7. date-picker.tsx - Date Input Wrapper
+
+### Features
+
+#### Simple Date Selection
+- Wraps native datetime-local input
+- Handles timezone conversion
+- Provides consistent styling
+
+#### Props
+```typescript
+interface DatePickerProps {
+  value?: Date | string
+  onChange: (date: Date | undefined) => void
+  placeholder?: string
+  disabled?: boolean
+}
+```
+
+#### Formatting
+- Converts Date objects to datetime-local format
+- Handles null/undefined gracefully
+- Preserves time component
 
 ## Known Limitations
 

@@ -20,8 +20,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: read
-      issues: read
+      pull-requests: write
+      issues: write
       id-token: write
       actions: read # Required for Claude to read CI results on PRs
     steps:
@@ -50,7 +50,7 @@ jobs:
           # assignee_trigger: "claude-bot"
           
           # Optional: Allow Claude to run specific commands
-          allowed_tools: "Bash,Bash(ls),Bash(cat),Bash(echo),Bash(bun run:*),Bash(bun *),Bash(bun:*),Bash(git *),Bash(git:*)"
+          allowed_tools: "Bash,Bash(ls),Bash(cat),Bash(echo),Bash(bun run:*),Bash(bun *),Bash(bun:*),Bash(git *),Bash(git:*),Bash(git init:*),Bash(git add:*),Bash(git commit:*),Bash(git remote add:*),Bash(git push:*),Bash(bun add:*),Bash(bunx:*),Bash(bun run lint:check:*),Bash(npx tsc:*),Bash(rm:*),Bash(grep:*),Bash(bunx tsc:*),Bash(npm run build:*),Bash(ls:*),Bash(git checkout:*),Bash(find:*),Bash(bun run lint:*),Bash(cat:*),Bash(bun run biome check:*),Bash(bun biome check:*),Bash(mkdir:*),Bash(bun list:*),Bash(curl:*),Bash(jq:*),Bash(gh pr create:*),Bash(gh issue view:*),Bash(git reset:*)"
           
           # Optional: Add custom instructions for Claude to customize its behavior for your project
           custom_instructions: |

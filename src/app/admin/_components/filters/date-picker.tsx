@@ -15,7 +15,7 @@ export function DatePicker({ value, onChange, placeholder }: DatePickerProps) {
     }
     try {
       const parsedDate = new Date(date);
-      if (isNaN(parsedDate.getTime())) {
+      if (Number.isNaN(parsedDate.getTime())) {
         return '';
       }
       return parsedDate.toISOString().slice(0, 16);
@@ -31,7 +31,7 @@ export function DatePicker({ value, onChange, placeholder }: DatePickerProps) {
         if (e.target.value) {
           try {
             const date = new Date(e.target.value);
-            if (!isNaN(date.getTime())) {
+            if (!Number.isNaN(date.getTime())) {
               onChange(date.toISOString());
             }
           } catch {

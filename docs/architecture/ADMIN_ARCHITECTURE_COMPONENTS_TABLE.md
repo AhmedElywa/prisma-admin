@@ -252,6 +252,7 @@ Page → DataTable → BulkActions
 3. **Pagination**: Limits rendered rows
 4. **React keys**: Proper key usage for updates
 5. **Memoization**: Not implemented (TODO)
+6. **Compact mode**: For nested table displays - reduces padding and font sizes for space efficiency
 
 ## Future Enhancements
 

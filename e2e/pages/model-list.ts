@@ -31,8 +31,16 @@ export class ModelListPage {
   }
 
   async clickCreate() {
-    await this.createButton.click();
-    await this.page.waitForURL('**/new');
+    // Try different selectors for the create button
+    let button = this.createButton;
+
+    // If the standard selector doesn't work, try alternatives
+    if (!(await button.isVisible({ timeout: 1000 }).catch(() => false))) {
+      button = this.page.getByRole('link', { name: /add|create|new/i }).first();
+    }
+
+    await button.click();
+    await this.page.waitForURL('**/new', { timeout: 10_000 });
   }
 
   async search(query: string) {

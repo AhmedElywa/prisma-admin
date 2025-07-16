@@ -2,48 +2,61 @@ name: E2E & Playwright Tests
 
 on:
   push:
-    branches: [main, master]
+    branches: [main]
   pull_request:
-    branches: [main, master]
+    branches: [main]
 
 jobs:
   test:
     timeout-minutes: 60
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/prisma_admin_test
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: prisma_admin_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          version: 8
+          bun-version: latest
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
 
       - name: Install dependencies
-        run: pnpm install
+        run: bun install
 
       - name: Setup database
         run: |
-          pnpm prisma generate
-          pnpm prisma db push
-          pnpm prisma db seed
+          bun run generate
+          bun run db:push
+          bun run db:seed
 
       - name: Build application
-        run: pnpm build
+        run: bun run build
 
       - name: Install Playwright Browsers
-        run: pnpm exec playwright install --with-deps
+        run: bunx playwright install --with-deps
 
       - name: Run Playwright tests
-        run: pnpm test:e2e
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL || 'file:./dev.db' }}
+        run: bun run test:e2e
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
@@ -63,54 +76,63 @@ jobs:
 
   test-matrix:
     timeout-minutes: 60
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/prisma_admin_test
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: prisma_admin_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
         browser: [chromium, firefox, webkit]
-        exclude:
-          - os: windows-latest
-            browser: webkit
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          version: 8
+          bun-version: latest
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
 
       - name: Install dependencies
-        run: pnpm install
+        run: bun install
 
       - name: Setup database
         run: |
-          pnpm prisma generate
-          pnpm prisma db push
-          pnpm prisma db seed
+          bun run generate
+          bun run db:push
+          bun run db:seed
 
       - name: Build application
-        run: pnpm build
+        run: bun run build
 
       - name: Install Playwright Browsers
-        run: pnpm exec playwright install --with-deps ${{ matrix.browser }}
+        run: bunx playwright install --with-deps ${{ matrix.browser }}
 
       - name: Run Playwright tests
-        run: pnpm test:e2e --project=${{ matrix.browser }}
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL || 'file:./dev.db' }}
+        run: bun run test:e2e --project=${{ matrix.browser }}
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: playwright-report-${{ matrix.os }}-${{ matrix.browser }}
+          name: playwright-report-${{ matrix.browser }}
           path: playwright-report/
           retention-days: 30

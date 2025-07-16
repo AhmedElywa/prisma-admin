@@ -16,7 +16,7 @@ import {
   getTableFields,
   getUpdateFields,
 } from '@/lib/admin/settings';
-import type { AdminField, QueryOptions } from '@/lib/admin/types';
+import type { AdminField, AdminModel, QueryOptions } from '@/lib/admin/types';
 import { getPrismaModel, normalizeModelName } from '@/lib/prisma-client';
 import type {
   OrderByInput,
@@ -227,6 +227,132 @@ export async function getModelRecord(modelName: string, id: string | number) {
   return record;
 }
 
+// Helper function to convert form value based on field type
+function convertFormValue(
+  value: any,
+  fieldType: string,
+  field?: AdminField
+): any {
+  switch (fieldType) {
+    case 'Int':
+    case 'BigInt':
+      return Number.parseInt(value as string, 10);
+    case 'Float':
+    case 'Decimal':
+      return Number.parseFloat(value as string);
+    case 'Boolean':
+      return value === 'true' || value === 'on';
+    case 'DateTime':
+      return new Date(value as string);
+    case 'Json':
+      try {
+        return JSON.parse(value as string);
+      } catch {
+        if (field) {
+          throw new Error(`Invalid JSON in ${field.title}`);
+        }
+        return value;
+      }
+    case 'String':
+      // For file uploads, store the filename/path
+      if (field?.upload && value instanceof File) {
+        return `uploads/${(value as File).name}`;
+      }
+      return value;
+    default:
+      return value;
+  }
+}
+
+// Helper function to process relation field
+function processRelationField(
+  field: AdminField,
+  formData: FormData,
+  model: AdminModel
+): any {
+  const value = formData.get(field.name);
+  if (!value || value === '') {
+    return;
+  }
+
+  const relatedModel = model.fields.find((f) => f.name === field.relationFrom);
+  const idType =
+    relatedModel?.type === 'Int' ? Number.parseInt(value as string, 10) : value;
+
+  return { connect: { id: idType } };
+}
+
+// Helper function to process many-to-many relation
+function processManyToManyRelation(field: AdminField, formData: FormData): any {
+  const values = formData.getAll(`${field.name}[]`);
+  if (values.length === 0) {
+    return;
+  }
+
+  return {
+    connect: values.map((v) => ({
+      id: Number.parseInt(v as string, 10) || v,
+    })),
+  };
+}
+
+// Helper function to process scalar array field
+function processScalarArrayField(field: AdminField, formData: FormData): any[] {
+  const values: any[] = [];
+  let index = 0;
+
+  while (true) {
+    const value = formData.get(`${field.name}[${index}]`);
+    if (value === null) {
+      break;
+    }
+
+    const convertedValue = convertFormValue(value, field.type);
+    values.push(convertedValue);
+    index++;
+  }
+
+  if (values.length === 0 && field.required) {
+    throw new Error(`${field.title} is required`);
+  }
+
+  return values;
+}
+
+// Helper to process a single field for create/update
+function processField(
+  field: AdminField,
+  formData: FormData,
+  model: AdminModel
+): any {
+  // Handle relation fields
+  if (field.kind === 'object') {
+    return processRelationField(field, formData, model);
+  }
+
+  // Handle many-to-many relations
+  if (field.list && field.relationName) {
+    return processManyToManyRelation(field, formData);
+  }
+
+  // Handle scalar array fields
+  if (field.list && field.kind === 'scalar') {
+    const values = processScalarArrayField(field, formData);
+    return values.length > 0 || !field.required ? values : undefined;
+  }
+
+  // Handle regular scalar fields
+  const value = formData.get(field.name);
+  if (value === null || value === '') {
+    if (field.required) {
+      throw new Error(`${field.title} is required`);
+    }
+    return;
+  }
+
+  return convertFormValue(value, field.type, field);
+}
+
 // Create a new record
 export async function createModelRecord(modelName: string, formData: FormData) {
   const model = await getModelSettings(modelName);
@@ -239,141 +365,106 @@ export async function createModelRecord(modelName: string, formData: FormData) {
 
   // Process form data based on field types
   for (const field of fields) {
-    // Handle relation fields
-    if (field.kind === 'object') {
-      const value = formData.get(field.name);
-      if (value && value !== '') {
-        // For relations, use connect syntax
-        const relatedModel = model.fields.find(
-          (f) => f.name === field.relationFrom
-        );
-        const idType =
-          relatedModel?.type === 'Int'
-            ? Number.parseInt(value as string, 10)
-            : value;
-        data[field.name] = {
-          connect: { id: idType },
-        };
-      }
-      continue;
-    }
-
-    // Handle many-to-many relations
-    if (field.list && field.relationName) {
-      const values = formData.getAll(`${field.name}[]`);
-      if (values.length > 0) {
-        data[field.name] = {
-          connect: values.map((v) => ({
-            id: Number.parseInt(v as string, 10) || v,
-          })),
-        };
-      }
-      continue;
-    }
-
-    // Handle scalar array fields
-    if (field.list && field.kind === 'scalar') {
-      const values: any[] = [];
-      let index = 0;
-      while (true) {
-        const value = formData.get(`${field.name}[${index}]`);
-        if (value === null) {
-          break;
-        }
-
-        // Convert value based on field type
-        let convertedValue: any = value;
-        switch (field.type) {
-          case 'Int':
-          case 'BigInt':
-            convertedValue = Number.parseInt(value as string, 10);
-            break;
-          case 'Float':
-          case 'Decimal':
-            convertedValue = Number.parseFloat(value as string);
-            break;
-          case 'Boolean':
-            convertedValue = value === 'true';
-            break;
-          case 'DateTime':
-            convertedValue = new Date(value as string);
-            break;
-          case 'Json':
-            try {
-              convertedValue = JSON.parse(value as string);
-            } catch {
-              convertedValue = value;
-            }
-            break;
-          default:
-            // Keep value as is for String and other types
-            break;
-        }
-
-        values.push(convertedValue);
-        index++;
-      }
-
-      if (values.length > 0 || !field.required) {
-        data[field.name] = values;
-      } else if (field.required) {
-        throw new Error(`${field.title} is required`);
-      }
-      continue;
-    }
-
-    const value = formData.get(field.name);
-
-    if (value === null || value === '') {
-      if (field.required) {
-        throw new Error(`${field.title} is required`);
-      }
-      continue;
-    }
-
-    // Convert value based on field type
-    switch (field.type) {
-      case 'Int':
-      case 'BigInt':
-        data[field.name] = Number.parseInt(value as string, 10);
-        break;
-      case 'Float':
-      case 'Decimal':
-        data[field.name] = Number.parseFloat(value as string);
-        break;
-      case 'Boolean':
-        data[field.name] = value === 'true' || value === 'on';
-        break;
-      case 'DateTime':
-        data[field.name] = new Date(value as string);
-        break;
-      case 'Json':
-        try {
-          data[field.name] = JSON.parse(value as string);
-        } catch {
-          throw new Error(`Invalid JSON in ${field.title}`);
-        }
-        break;
-      case 'String':
-        // For file uploads, we would need to handle the file separately
-        // For now, we'll just store the filename or path as a string
-        // In a real implementation, you'd upload to S3/Cloudinary/etc.
-        if (field.upload && value instanceof File) {
-          // This is a placeholder - in production, upload the file
-          // and store the URL/path
-          data[field.name] = `uploads/${(value as File).name}`;
-        } else {
-          data[field.name] = value;
-        }
-        break;
-      default:
-        data[field.name] = value;
+    const result = processField(field, formData, model);
+    if (result !== undefined) {
+      data[field.name] = result;
     }
   }
 
   const modelDelegate = getPrismaModel(normalizeModelName(modelName));
   await modelDelegate.create({ data });
   revalidatePath(`/admin/${modelName.toLowerCase()}`);
+}
+
+// Helper function to process relation field for update
+function processRelationFieldUpdate(
+  field: AdminField,
+  formData: FormData,
+  model: AdminModel
+): any {
+  const value = formData.get(field.name);
+  if (value !== null && value !== '') {
+    const relatedModel = model.fields.find(
+      (f) => f.name === field.relationFrom
+    );
+    const idType =
+      relatedModel?.type === 'Int'
+        ? Number.parseInt(value as string, 10)
+        : value;
+    return { connect: { id: idType } };
+  }
+
+  if (!field.required) {
+    return { disconnect: true };
+  }
+
+  return;
+}
+
+// Helper function to process many-to-many relation for update
+function processManyToManyRelationUpdate(
+  field: AdminField,
+  formData: FormData
+): any {
+  const values: string[] = [];
+  let index = 0;
+
+  while (true) {
+    const value = formData.get(`${field.name}[${index}]`);
+    if (value === null) {
+      break;
+    }
+    values.push(value as string);
+    index++;
+  }
+
+  if (values.length > 0) {
+    return {
+      set: values.map((v) => ({
+        id: field.type === 'Int' ? Number.parseInt(v, 10) : v,
+      })),
+    };
+  }
+
+  return { set: [] };
+}
+
+// Helper to process field for update operation
+function processFieldForUpdate(
+  field: AdminField,
+  formData: FormData,
+  model: AdminModel,
+  data: Record<string, any>
+) {
+  // Handle relation fields
+  if (field.kind === 'object') {
+    const result = processRelationFieldUpdate(field, formData, model);
+    if (result) {
+      data[field.name] = result;
+    }
+    return;
+  }
+
+  // Handle many-to-many relations
+  if (field.list && field.relationName) {
+    data[field.name] = processManyToManyRelationUpdate(field, formData);
+    return;
+  }
+
+  // Handle scalar array fields
+  if (field.list && field.kind === 'scalar') {
+    const values = processScalarArrayField(field, formData);
+    data[field.name] = values;
+    return;
+  }
+
+  // Handle regular scalar fields
+  const value = formData.get(field.name);
+  if (value !== null && value !== '') {
+    data[field.name] = convertFormValue(value, field.type, field);
+  } else if (field.required) {
+    throw new Error(`${field.title} is required`);
+  }
 }
 
 // Update an existing record
@@ -396,156 +487,9 @@ export async function updateModelRecord(
       ? Number.parseInt(id as string, 10)
       : id;
 
-  // Process form data
+  // Process each field
   for (const field of fields) {
-    // Handle relation fields
-    if (field.kind === 'object') {
-      const value = formData.get(field.name);
-      if (value !== null && value !== '') {
-        // For relations, use connect syntax
-        const relatedModel = model.fields.find(
-          (f) => f.name === field.relationFrom
-        );
-        const idType =
-          relatedModel?.type === 'Int'
-            ? Number.parseInt(value as string, 10)
-            : value;
-        data[field.name] = {
-          connect: { id: idType },
-        };
-      } else if (!field.required) {
-        // Disconnect if empty and not required
-        data[field.name] = {
-          disconnect: true,
-        };
-      }
-      continue;
-    }
-
-    // Handle many-to-many relations
-    if (field.list && field.relationName) {
-      // RelationConnect component sends data as field[0], field[1], etc.
-      const values: string[] = [];
-      let index = 0;
-      while (true) {
-        const value = formData.get(`${field.name}[${index}]`);
-        if (value === null) {
-          break;
-        }
-        values.push(value as string);
-        index++;
-      }
-
-      if (values.length > 0) {
-        // Use set to replace all connections
-        data[field.name] = {
-          set: values.map((v) => ({
-            id: field.type === 'Int' ? Number.parseInt(v, 10) : v,
-          })),
-        };
-      } else {
-        // Disconnect all if none selected
-        data[field.name] = {
-          set: [],
-        };
-      }
-      continue;
-    }
-
-    // Handle scalar array fields
-    if (field.list && field.kind === 'scalar') {
-      const values: any[] = [];
-      let index = 0;
-      while (true) {
-        const value = formData.get(`${field.name}[${index}]`);
-        if (value === null) {
-          break;
-        }
-
-        // Convert value based on field type
-        let convertedValue: any = value;
-        switch (field.type) {
-          case 'Int':
-          case 'BigInt':
-            convertedValue = Number.parseInt(value as string, 10);
-            break;
-          case 'Float':
-          case 'Decimal':
-            convertedValue = Number.parseFloat(value as string);
-            break;
-          case 'Boolean':
-            convertedValue = value === 'true';
-            break;
-          case 'DateTime':
-            convertedValue = new Date(value as string);
-            break;
-          case 'Json':
-            try {
-              convertedValue = JSON.parse(value as string);
-            } catch {
-              convertedValue = value;
-            }
-            break;
-          default:
-            // Keep value as is for String and other types
-            break;
-        }
-
-        values.push(convertedValue);
-        index++;
-      }
-
-      data[field.name] = values;
-      continue;
-    }
-
-    const value = formData.get(field.name);
-
-    if (value === null || value === '') {
-      if (field.required) {
-        throw new Error(`${field.title} is required`);
-      }
-      continue;
-    }
-
-    // Convert value based on field type
-    switch (field.type) {
-      case 'Int':
-      case 'BigInt':
-        data[field.name] = Number.parseInt(value as string, 10);
-        break;
-      case 'Float':
-      case 'Decimal':
-        data[field.name] = Number.parseFloat(value as string);
-        break;
-      case 'Boolean':
-        data[field.name] = value === 'true' || value === 'on';
-        break;
-      case 'DateTime':
-        data[field.name] = new Date(value as string);
-        break;
-      case 'Json':
-        try {
-          data[field.name] = JSON.parse(value as string);
-        } catch {
-          throw new Error(`Invalid JSON in ${field.title}`);
-        }
-        break;
-      case 'String':
-        // For file uploads, we would need to handle the file separately
-        // For now, we'll just store the filename or path as a string
-        // In a real implementation, you'd upload to S3/Cloudinary/etc.
-        if (field.upload && value instanceof File) {
-          // This is a placeholder - in production, upload the file
-          // and store the URL/path
-          data[field.name] = `uploads/${(value as File).name}`;
-        } else {
-          data[field.name] = value;
-        }
-        break;
-      default:
-        data[field.name] = value;
-    }
+    processFieldForUpdate(field, formData, model, data);
   }
 
   const modelDelegate = getPrismaModel(normalizeModelName(modelName));

@@ -2,7 +2,7 @@ name: Claude Code Review
 
 on:
   pull_request:
-    types: [opened, synchronize]
+    types: [opened, synchronize, reopened]
     # Optional: Only run on specific file changes
     # paths:
     #   - "src/**/*.ts"
@@ -21,9 +21,10 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: read
-      issues: read
+      pull-requests: write
+      issues: write
       id-token: write
+      actions: read
     
     steps:
       - name: Checkout repository
@@ -36,9 +37,11 @@ jobs:
         uses: anthropics/claude-code-action@beta
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          additional_permissions: |
+            actions: read
 
           # Optional: Specify model (defaults to Claude Sonnet 4, uncomment for Claude Opus 4)
-          # model: "claude-opus-4-20250514"
+          model: "claude-opus-4-20250514"
           
           # Direct prompt for automated review (no @claude mention needed)
           direct_prompt: |
@@ -69,7 +72,7 @@ jobs:
           #   'Please provide a thorough code review focusing on our coding standards and best practices.' }}
           
           # Optional: Add specific tools for running tests or linting
-          allowed_tools: "Bash(*),Bash(bun),Bash(git)"
+          allowed_tools: "Bash,Bash(ls),Bash(cat),Bash(echo),Bash(bun run:*),Bash(bun *),Bash(bun:*),Bash(git *),Bash(git:*),Bash(git init:*),Bash(git add:*),Bash(git commit:*),Bash(git remote add:*),Bash(git push:*),Bash(bun add:*),Bash(bunx:*),Bash(bun run lint:check:*),Bash(npx tsc:*),Bash(rm:*),Bash(grep:*),Bash(bunx tsc:*),Bash(npm run build:*),Bash(ls:*),Bash(git checkout:*),Bash(find:*),Bash(bun run lint:*),Bash(cat:*),Bash(bun run biome check:*),Bash(bun biome check:*),Bash(mkdir:*),Bash(bun list:*),Bash(curl:*),Bash(jq:*),Bash(gh pr create:*),Bash(gh issue view:*),Bash(git reset:*)"
           
           # Optional: Skip review for certain conditions
           # if: |

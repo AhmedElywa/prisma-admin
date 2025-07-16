@@ -209,10 +209,12 @@ export function AdvancedFilterPanel({
             <div className="space-y-3">
               {tempRelationFilters.map((filter) => (
                 <RelationFilterCard
-                  getRelationFields={getRelationFields || (() => {
-                    console.warn('getRelationFields not provided, relation filtering disabled');
-                    return Promise.resolve([]);
-                  })}
+                  getRelationFields={
+                    getRelationFields ||
+                    (() => {
+                      return Promise.resolve([]);
+                    })
+                  }
                   key={filter.id}
                   onChange={(value) => updateRelationFilter(filter.id, value)}
                   onRemove={() => removeRelationFilter(filter.id)}

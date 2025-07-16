@@ -52,11 +52,32 @@ export class ModelFormPage {
   }
 
   async toggleCheckbox(label: string, check = true) {
-    const checkbox = this.form.getByLabel(label);
-    if (check) {
-      await checkbox.check();
-    } else {
-      await checkbox.uncheck();
+    // Try multiple strategies to find the checkbox
+    let checkbox = this.form.getByLabel(label);
+
+    // If not found by label, try by role with name
+    if (!(await checkbox.isVisible({ timeout: 1000 }).catch(() => false))) {
+      checkbox = this.form.getByRole('checkbox', { name: label });
+    }
+
+    // If still not found, try finding by parent label text
+    if (!(await checkbox.isVisible({ timeout: 1000 }).catch(() => false))) {
+      checkbox = this.form.locator(
+        `label:has-text("${label}") input[type="checkbox"]`
+      );
+    }
+
+    // If still not found, try switch role (for toggle switches)
+    if (!(await checkbox.isVisible({ timeout: 1000 }).catch(() => false))) {
+      checkbox = this.form.getByRole('switch', { name: label });
+    }
+
+    // Ensure checkbox is visible before interacting
+    await checkbox.waitFor({ state: 'visible' });
+
+    const isChecked = await checkbox.isChecked();
+    if ((check && !isChecked) || (!check && isChecked)) {
+      await checkbox.click();
     }
   }
 

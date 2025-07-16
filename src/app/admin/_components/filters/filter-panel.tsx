@@ -21,6 +21,137 @@ interface FilterPanelProps {
   getRelationFields?: (modelName: string) => Promise<FilterConfig[]>;
 }
 
+// Constants
+const operatorLabels: Record<string, string> = {
+  equals: '=',
+  not: '≠',
+  contains: 'contains',
+  startsWith: 'starts with',
+  endsWith: 'ends with',
+  lt: '<',
+  lte: '≤',
+  gt: '>',
+  gte: '≥',
+  in: 'in',
+  notIn: 'not in',
+  is: 'is',
+  isNot: 'is not',
+  every: 'all match',
+  some: 'any match',
+  none: 'none match',
+};
+
+// Helper functions
+const normalizeFilter = (filter: FilterValue) => {
+  const { field, operator, value, type } = filter;
+  return { field, operator, value, type };
+};
+
+const formatFilterValue = (value: any) => {
+  if (value === null || value === undefined) {
+    return '';
+  }
+  if (Array.isArray(value)) {
+    return ` [${value.length} items]`;
+  }
+  if (typeof value === 'object') {
+    return ' ...';
+  }
+  return ` ${value}`;
+};
+
+const updateUrlWithFilters = (
+  filters: FilterValue[],
+  searchParams: URLSearchParams,
+  router: any
+) => {
+  const params = new URLSearchParams(searchParams.toString());
+
+  if (filters.length > 0) {
+    params.set('filters', encodeURIComponent(JSON.stringify(filters)));
+  } else {
+    params.delete('filters');
+  }
+
+  params.set('page', '1');
+  router.push(`?${params.toString()}`);
+};
+
+// Helper component to show filter change message
+const FilterChangeMessage = ({
+  currentCount,
+  tempCount,
+}: {
+  currentCount: number;
+  tempCount: number;
+}) => {
+  const getMessage = () => {
+    if (tempCount === 0 && currentCount > 0) {
+      return 'All filters will be cleared';
+    }
+
+    const diff = tempCount - currentCount;
+    if (diff > 0) {
+      return `${diff} new filter${diff > 1 ? 's' : ''} to apply`;
+    }
+
+    if (diff < 0) {
+      const removedCount = Math.abs(diff);
+      return `${removedCount} filter${removedCount > 1 ? 's' : ''} to remove`;
+    }
+
+    return 'Filters have been modified';
+  };
+
+  return (
+    <p className="text-center text-muted-foreground text-xs">{getMessage()}</p>
+  );
+};
+
+// Component to display active filters
+const ActiveFilters = ({
+  filters,
+  getFilterLabel,
+  onRemoveFilter,
+  onClearAll,
+}: {
+  filters: FilterValue[];
+  getFilterLabel: (filter: FilterValue) => string;
+  onRemoveFilter: (index: number) => void;
+  onClearAll: () => void;
+}) => {
+  return (
+    <>
+      <div className="flex flex-wrap items-center gap-2">
+        {filters.map((filter, index) => (
+          <Badge
+            className="gap-1"
+            key={`filter-${index}-${filter.field}-${filter.operator}`}
+            variant="secondary"
+          >
+            <span className="text-xs">{getFilterLabel(filter)}</span>
+            <button
+              className="ml-1 hover:text-destructive"
+              onClick={() => onRemoveFilter(index)}
+              type="button"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </Badge>
+        ))}
+      </div>
+      <Button
+        className="text-xs"
+        onClick={onClearAll}
+        size="sm"
+        variant="ghost"
+      >
+        Clear all
+      </Button>
+    </>
+  );
+};
+
 export function FilterPanel({
   fields,
   modelName,
@@ -40,11 +171,6 @@ export function FilterPanel({
   const [justCleared, setJustCleared] = useState(false);
 
   // Check if filters have changed - compare meaningful properties only
-  const normalizeFilter = (filter: FilterValue) => {
-    const { field, operator, value, type } = filter;
-    return { field, operator, value, type };
-  };
-
   const normalizedTemp = tempFilters.map(normalizeFilter);
   const normalizedCurrent = currentFilters.map(normalizeFilter);
 
@@ -53,42 +179,19 @@ export function FilterPanel({
     justCleared;
 
   const handleApplyFilters = () => {
-    const params = new URLSearchParams(searchParams.toString());
-
-    if (tempFilters.length > 0) {
-      params.set('filters', encodeURIComponent(JSON.stringify(tempFilters)));
-    } else {
-      params.delete('filters');
-    }
-
-    // Reset to page 1 when filters change
-    params.set('page', '1');
-
-    router.push(`?${params.toString()}`);
+    updateUrlWithFilters(tempFilters, searchParams, router);
     setIsOpen(false);
     setJustCleared(false);
   };
 
   const handleClearFilters = () => {
     setTempFilters([]);
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete('filters');
-    params.set('page', '1');
-    router.push(`?${params.toString()}`);
+    updateUrlWithFilters([], searchParams, router);
   };
 
   const handleRemoveFilter = (index: number) => {
     const newFilters = currentFilters.filter((_, i) => i !== index);
-    const params = new URLSearchParams(searchParams.toString());
-
-    if (newFilters.length > 0) {
-      params.set('filters', encodeURIComponent(JSON.stringify(newFilters)));
-    } else {
-      params.delete('filters');
-    }
-
-    params.set('page', '1');
-    router.push(`?${params.toString()}`);
+    updateUrlWithFilters(newFilters, searchParams, router);
   };
 
   const getFilterLabel = (filter: FilterValue) => {
@@ -97,76 +200,19 @@ export function FilterPanel({
       return filter.field;
     }
 
-    let label = `${field.label} `;
-
-    switch (filter.operator) {
-      case 'equals':
-        label += '=';
-        break;
-      case 'not':
-        label += '≠';
-        break;
-      case 'contains':
-        label += 'contains';
-        break;
-      case 'startsWith':
-        label += 'starts with';
-        break;
-      case 'endsWith':
-        label += 'ends with';
-        break;
-      case 'lt':
-        label += '<';
-        break;
-      case 'lte':
-        label += '≤';
-        break;
-      case 'gt':
-        label += '>';
-        break;
-      case 'gte':
-        label += '≥';
-        break;
-      case 'in':
-        label += 'in';
-        break;
-      case 'notIn':
-        label += 'not in';
-        break;
-      case 'isNull':
-        return `${field.label} is empty`;
-      case 'isNotNull':
-        return `${field.label} is not empty`;
-      case 'is':
-        label += 'is';
-        break;
-      case 'isNot':
-        label += 'is not';
-        break;
-      case 'every':
-        label += 'all match';
-        break;
-      case 'some':
-        label += 'any match';
-        break;
-      case 'none':
-        label += 'none match';
-        break;
-      default:
-        label += filter.operator;
+    // Special cases for null operators
+    if (filter.operator === 'isNull') {
+      return `${field.label} is empty`;
+    }
+    if (filter.operator === 'isNotNull') {
+      return `${field.label} is not empty`;
     }
 
-    if (filter.value !== null && filter.value !== undefined) {
-      if (Array.isArray(filter.value)) {
-        label += ` [${filter.value.length} items]`;
-      } else if (typeof filter.value === 'object') {
-        label += ' ...';
-      } else {
-        label += ` ${filter.value}`;
-      }
-    }
+    // Standard operators
+    const operatorLabel = operatorLabels[filter.operator] || filter.operator;
+    const valueLabel = formatFilterValue(filter.value);
 
-    return label;
+    return `${field.label} ${operatorLabel}${valueLabel}`;
   };
 
   return (
@@ -240,49 +286,22 @@ export function FilterPanel({
               </Button>
             </div>
             {hasChanges && (
-              <p className="text-center text-muted-foreground text-xs">
-                {tempFilters.length === 0 && currentFilters.length > 0
-                  ? 'All filters will be cleared'
-                  : tempFilters.length > currentFilters.length
-                    ? `${tempFilters.length - currentFilters.length} new filter${tempFilters.length - currentFilters.length > 1 ? 's' : ''} to apply`
-                    : currentFilters.length > tempFilters.length
-                      ? `${currentFilters.length - tempFilters.length} filter${currentFilters.length - tempFilters.length > 1 ? 's' : ''} to remove`
-                      : 'Filters have been modified'}
-              </p>
+              <FilterChangeMessage
+                currentCount={currentFilters.length}
+                tempCount={tempFilters.length}
+              />
             )}
           </div>
         </SheetContent>
       </Sheet>
 
       {currentFilters.length > 0 && (
-        <>
-          <div className="flex flex-wrap items-center gap-2">
-            {currentFilters.map((filter, index) => (
-              <Badge
-                className="gap-1"
-                key={`filter-${index}-${filter.field}-${filter.operator}`}
-                variant="secondary"
-              >
-                <span className="text-xs">{getFilterLabel(filter)}</span>
-                <button
-                  className="ml-1 hover:text-destructive"
-                  onClick={() => handleRemoveFilter(index)}
-                  type="button"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </Badge>
-            ))}
-          </div>
-          <Button
-            className="text-xs"
-            onClick={handleClearFilters}
-            size="sm"
-            variant="ghost"
-          >
-            Clear all
-          </Button>
-        </>
+        <ActiveFilters
+          filters={currentFilters}
+          getFilterLabel={getFilterLabel}
+          onClearAll={handleClearFilters}
+          onRemoveFilter={handleRemoveFilter}
+        />
       )}
     </div>
   );
