@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { mergeAdminSettings } from '../lib/admin/generator';
 
-async function main() {
+async function main(): Promise<void> {
   try {
     const schemaPath = path.join(process.cwd(), 'prisma', 'schema.prisma');
     const settingsPath = path.join(process.cwd(), 'adminSettings.json');

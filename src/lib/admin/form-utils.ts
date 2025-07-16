@@ -100,7 +100,7 @@ export function isFieldDisabled(field: AdminField, isEdit: boolean): boolean {
 /**
  * Get field validation rules
  */
-export function getFieldValidation(field: AdminField) {
+export function getFieldValidation(field: AdminField): Record<string, unknown> {
   const rules: any = {};
 
   if (field.required) {

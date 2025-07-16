@@ -210,7 +210,6 @@ export function AdvancedFilterPanel({
               {tempRelationFilters.map((filter) => (
                 <RelationFilterCard
                   getRelationFields={getRelationFields || (() => {
-                    console.warn('getRelationFields not provided, relation filtering disabled');
                     return Promise.resolve([]);
                   })}
                   key={filter.id}

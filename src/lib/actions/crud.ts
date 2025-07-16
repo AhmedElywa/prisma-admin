@@ -26,7 +26,7 @@ import type {
 } from '@/lib/prisma-types';
 
 // Build Prisma select object from model settings
-async function buildSelect(_modelName: string, fields: AdminField[]) {
+async function buildSelect(_modelName: string, fields: AdminField[]): Promise<SelectInput> {
   const select: SelectInput = {};
 
   // Get all related models in parallel

@@ -14,34 +14,26 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 8
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'pnpm'
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
 
       - name: Install dependencies
-        run: pnpm install
+        run: bun install
 
       - name: Setup database
         run: |
-          pnpm prisma generate
-          pnpm prisma db push
-          pnpm prisma db seed
+          bun run generate
+          bun run db:push
+          bun run db:seed
 
       - name: Build application
-        run: pnpm build
+        run: bun run build
 
       - name: Install Playwright Browsers
-        run: pnpm exec playwright install --with-deps
+        run: bunx playwright install --with-deps
 
       - name: Run Playwright tests
-        run: pnpm test:e2e
+        run: bun run test:e2e
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL || 'file:./dev.db' }}
 
@@ -76,34 +68,26 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 8
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'pnpm'
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
 
       - name: Install dependencies
-        run: pnpm install
+        run: bun install
 
       - name: Setup database
         run: |
-          pnpm prisma generate
-          pnpm prisma db push
-          pnpm prisma db seed
+          bun run generate
+          bun run db:push
+          bun run db:seed
 
       - name: Build application
-        run: pnpm build
+        run: bun run build
 
       - name: Install Playwright Browsers
-        run: pnpm exec playwright install --with-deps ${{ matrix.browser }}
+        run: bunx playwright install --with-deps ${{ matrix.browser }}
 
       - name: Run Playwright tests
-        run: pnpm test:e2e --project=${{ matrix.browser }}
+        run: bun run test:e2e --project=${{ matrix.browser }}
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL || 'file:./dev.db' }}
 
