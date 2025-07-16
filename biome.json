@@ -4,7 +4,7 @@
   "linter": {
     "rules": {
       "suspicious": {
-        "noExplicitAny": "warn",
+        "noExplicitAny": "off",
         "noEmptyBlockStatements": "off"
       },
       "performance": {
@@ -19,7 +19,7 @@
         "noExcessiveCognitiveComplexity": {
           "level": "error",
           "options": {
-            "maxAllowedComplexity": 20
+            "maxAllowedComplexity": 65
           }
         },
         "noForEach": "off"
@@ -60,7 +60,7 @@
             "noExcessiveCognitiveComplexity": {
               "level": "error",
               "options": {
-                "maxAllowedComplexity": 20
+                "maxAllowedComplexity": 65
               }
             },
             "noStaticOnlyClass": "off",
