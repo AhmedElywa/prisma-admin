@@ -53,3 +53,6 @@ temp/
 
 # Generated Prisma Client
 src/prisma-client/
+
+# test
+test-results/
