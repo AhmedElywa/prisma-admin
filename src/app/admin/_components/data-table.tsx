@@ -263,7 +263,7 @@ export function DataTable<T extends DataRecord = DataRecord>({
       title: column.label,
       type: column.relationTo || 'String',
       kind: 'object',
-      list: isList || column.isList,
+      list: isList || Boolean(column.isList),
       required: false,
       isId: false,
       unique: false,

@@ -164,25 +164,43 @@ CSV Column → Model Field
 
 #### Features
 - Tabbed interface for relations
-- Inline data tables
+- Inline data tables with compact mode
 - Add/edit/delete in context
 - Filtered by parent record
+- Quick add button per tab
 
 #### Implementation
 ```typescript
 interface RelationTabsProps {
   parentModel: string
   parentId: string | number
-  relations: RelationConfig[]
+  parentData?: any
 }
-
-// Each tab shows filtered table
-<DataTable
-  data={relatedData}
-  modelName={relation.model}
-  // Filters by parent
-/>
 ```
+
+#### Automatic Tab Generation
+```typescript
+// Finds all one-to-many relations
+const relatedFields = modelSettings.fields.filter(
+  field => field.relationTo === parentModel && field.isList
+)
+
+// Creates tab for each relation
+relatedFields.map(field => ({
+  label: field.title,
+  content: <RelatedDataTable 
+    parentModel={parentModel}
+    parentId={parentId}
+    relationField={field}
+  />
+}))
+```
+
+#### Quick Add Feature
+- Plus button in tab header
+- Opens modal with inline create form
+- Automatically links to parent
+- Refreshes table on success
 
 ### relation-form.tsx - Inline Relation Forms
 

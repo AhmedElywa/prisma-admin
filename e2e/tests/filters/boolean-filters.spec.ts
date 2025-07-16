@@ -1,4 +1,5 @@
 import { expect, test } from '../../fixtures/test';
+import { getTestPosts, TestDataHelper } from '../../helpers/test-data';
 import { FilterPanel } from '../../pages/filter-panel';
 import { ModelFormPage } from '../../pages/model-form';
 import { ModelListPage } from '../../pages/model-list';
@@ -7,118 +8,115 @@ test.describe('Boolean Filter Tests', () => {
   let listPage: ModelListPage;
   let filterPanel: FilterPanel;
   let formPage: ModelFormPage;
+  let testData: TestDataHelper;
 
   test.beforeEach(async ({ page }) => {
     listPage = new ModelListPage(page);
     filterPanel = new FilterPanel(page);
     formPage = new ModelFormPage(page);
+    testData = new TestDataHelper(page);
 
     await page.goto('/admin/post');
+    await page.waitForLoadState('networkidle');
+  });
 
-    // Create test data with various boolean states
-    const testPosts = [
-      { title: 'Published Post 1', published: true },
-      { title: 'Published Post 2', published: true },
-      { title: 'Draft Post 1', published: false },
-      { title: 'Draft Post 2', published: false },
-      { title: 'Draft Post 3', published: false },
-    ];
+  test.describe('with test data', () => {
+    test.beforeAll(async ({ browser }) => {
+      // Create test data once for all tests in this group
+      const page = await browser.newPage();
+      const helper = new TestDataHelper(page);
 
-    for (const post of testPosts) {
-      await listPage.clickCreate();
-      await formPage.fillField('Title', post.title);
+      await page.goto('/admin/post');
+      await helper.createPosts(getTestPosts());
 
-      // Handle published checkbox
-      const publishedCheckbox = formPage.form
-        .locator('input[type="checkbox"][name*="publish"]')
-        .first();
-      if (await publishedCheckbox.isVisible()) {
-        if (post.published) {
-          await publishedCheckbox.check();
-        } else {
-          await publishedCheckbox.uncheck();
-        }
+      await page.close();
+    });
+
+    test.afterAll(async ({ browser }) => {
+      // Clean up test data after all tests
+      const page = await browser.newPage();
+      const helper = new TestDataHelper(page);
+
+      await helper.deleteAllPosts();
+
+      await page.close();
+    });
+
+    test('should filter by true value', async ({ page }) => {
+      await filterPanel.open();
+      await filterPanel.addFilter('Published', 'equals', 'true');
+      await filterPanel.apply();
+
+      const rowCount = await listPage.getRowCount();
+      expect(rowCount).toBe(2);
+
+      for (let i = 0; i < rowCount; i++) {
+        const title = await listPage.getCellContent(i, 'title');
+        expect(title).toContain('Published Post');
       }
+    });
 
-      await formPage.submit();
-      await formPage.waitForSuccess();
-    }
-  });
-
-  test('should filter by true value', async ({ page }) => {
-    await filterPanel.open();
-    await filterPanel.addFilter('Published', 'equals', 'true');
-    await filterPanel.apply();
-
-    const rowCount = await listPage.getRowCount();
-    expect(rowCount).toBe(2);
-
-    for (let i = 0; i < rowCount; i++) {
-      const title = await listPage.getCellContent(i, 'title');
-      expect(title).toContain('Published Post');
-    }
-  });
-
-  test('should filter by false value', async ({ page }) => {
-    await filterPanel.open();
-    await filterPanel.addFilter('Published', 'equals', 'false');
-    await filterPanel.apply();
-
-    const rowCount = await listPage.getRowCount();
-    expect(rowCount).toBe(3);
-
-    for (let i = 0; i < rowCount; i++) {
-      const title = await listPage.getCellContent(i, 'title');
-      expect(title).toContain('Draft Post');
-    }
-  });
-
-  test('should use toggle/checkbox for boolean filter', async ({ page }) => {
-    await filterPanel.open();
-
-    // Look for boolean field filter
-    const fieldSelect = filterPanel.panel.locator('select').first();
-    await fieldSelect.selectOption({ label: /published/i });
-
-    // Should show toggle or select with true/false
-    const booleanToggle = filterPanel.panel
-      .locator('input[type="checkbox"], [role="switch"]')
-      .first();
-    const booleanSelect = filterPanel.panel
-      .locator('select')
-      .filter({ hasText: /true|false/i })
-      .first();
-
-    if (await booleanToggle.isVisible()) {
-      // Use toggle
-      await booleanToggle.check();
+    test('should filter by false value', async ({ page }) => {
+      await filterPanel.open();
+      await filterPanel.addFilter('Published', 'equals', 'false');
       await filterPanel.apply();
 
       const rowCount = await listPage.getRowCount();
-      expect(rowCount).toBe(2); // Published posts
-    } else if (await booleanSelect.isVisible()) {
-      // Use select
-      await booleanSelect.selectOption('true');
+      expect(rowCount).toBe(3);
+
+      for (let i = 0; i < rowCount; i++) {
+        const title = await listPage.getCellContent(i, 'title');
+        expect(title).toContain('Draft Post');
+      }
+    });
+
+    test('should use toggle/checkbox for boolean filter', async ({ page }) => {
+      await filterPanel.open();
+
+      // Look for boolean field filter
+      const fieldSelect = filterPanel.panel.locator('select').first();
+      await fieldSelect.selectOption({ label: /published/i });
+
+      // Should show toggle or select with true/false
+      const booleanToggle = filterPanel.panel
+        .locator('input[type="checkbox"], [role="switch"]')
+        .first();
+      const booleanSelect = filterPanel.panel
+        .locator('select')
+        .filter({ hasText: /true|false/i })
+        .first();
+
+      if (await booleanToggle.isVisible()) {
+        // Use toggle
+        await booleanToggle.check();
+        await filterPanel.apply();
+
+        const rowCount = await listPage.getRowCount();
+        expect(rowCount).toBe(2); // Published posts
+      } else if (await booleanSelect.isVisible()) {
+        // Use select
+        await booleanSelect.selectOption('true');
+        await filterPanel.apply();
+
+        const rowCount = await listPage.getRowCount();
+        expect(rowCount).toBe(2); // Published posts
+      }
+    });
+
+    test('should handle "not equals" for boolean', async ({ page }) => {
+      await filterPanel.open();
+      await filterPanel.addFilter('Published', 'not equals', 'true');
       await filterPanel.apply();
 
       const rowCount = await listPage.getRowCount();
-      expect(rowCount).toBe(2); // Published posts
-    }
-  });
+      expect(rowCount).toBe(3); // Draft posts
 
-  test('should handle "not equals" for boolean', async ({ page }) => {
-    await filterPanel.open();
-    await filterPanel.addFilter('Published', 'not equals', 'true');
-    await filterPanel.apply();
-
-    const rowCount = await listPage.getRowCount();
-    expect(rowCount).toBe(3); // Draft posts
-
-    for (let i = 0; i < rowCount; i++) {
-      const title = await listPage.getCellContent(i, 'title');
-      expect(title).toContain('Draft');
-    }
-  });
+      for (let i = 0; i < rowCount; i++) {
+        const title = await listPage.getCellContent(i, 'title');
+        expect(title).toContain('Draft');
+      }
+    });
+  }); // End of 'with test data' describe
 
   test('should filter null/empty boolean values', async ({ page }) => {
     // Create post without explicit published value

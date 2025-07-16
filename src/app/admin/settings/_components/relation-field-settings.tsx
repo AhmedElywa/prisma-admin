@@ -150,7 +150,7 @@ export function RelationFieldSettings({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {getValidDisplayModes(relationType).map((mode) => (
+                {getValidDisplayModes(relationType).filter(Boolean).map((mode) => mode && (
                   <SelectItem key={mode} value={mode}>
                     {mode === 'dropdown' && 'Dropdown (with actions)'}
                     {mode === 'tags' && 'Tags (pills)'}

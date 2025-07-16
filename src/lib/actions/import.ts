@@ -4,6 +4,92 @@ import { canCreateModel, getModelSettings } from '@/lib/admin/settings';
 import type { AdminField } from '@/lib/admin/types';
 import { getPrismaModel, normalizeModelName } from '@/lib/prisma-client';
 
+// Helper function to parse CSV row into record
+function parseCSVRow(
+  values: string[],
+  headers: string[],
+  mappings: Record<string, string>,
+  modelFields: AdminField[]
+): Record<string, any> {
+  const record: Record<string, any> = {};
+
+  headers.forEach((header, index) => {
+    const fieldName = mappings[header];
+    if (!fieldName) {
+      return;
+    }
+
+    const field = modelFields.find((f) => f.name === fieldName);
+    if (!field) {
+      return;
+    }
+
+    const value = values[index];
+    if (!value && field.required) {
+      throw new Error(`Missing required field: ${field.title}`);
+    }
+
+    record[fieldName] = convertValue(value, field);
+  });
+
+  return record;
+}
+
+// Helper function to validate required fields
+function validateRequiredFields(
+  record: Record<string, any>,
+  modelFields: AdminField[]
+) {
+  const requiredFields = modelFields.filter(
+    (f) => f.required && f.create && !f.isId
+  );
+
+  for (const field of requiredFields) {
+    if (!(field.name in record) || record[field.name] === null) {
+      throw new Error(`Missing required field: ${field.title}`);
+    }
+  }
+}
+
+// Helper function to process CSV rows
+function processCSVRows(
+  lines: string[],
+  startIndex: number,
+  headers: string[],
+  mappings: Record<string, string>,
+  model: any
+) {
+  const recordsToCreate: Array<{ record: any; rowIndex: number }> = [];
+  const errors: string[] = [];
+  let failed = 0;
+
+  for (let i = startIndex; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) {
+      continue;
+    }
+
+    try {
+      const values = parseCSVLine(line);
+      const record = parseCSVRow(values, headers, mappings, model.fields);
+      validateRequiredFields(record, model.fields);
+      recordsToCreate.push({ record, rowIndex: i });
+    } catch (error) {
+      failed++;
+      errors.push(
+        `Row ${i + 1}: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+
+      if (errors.length >= 100) {
+        errors.push('Too many errors, import stopped');
+        break;
+      }
+    }
+  }
+
+  return { recordsToCreate, errors, failed };
+}
+
 export async function importCSVData(formData: FormData) {
   const file = formData.get('file') as File;
   const modelName = formData.get('modelName') as string;
@@ -34,80 +120,28 @@ export async function importCSVData(formData: FormData) {
 
   // Parse headers
   const headers = parseCSVLine(lines[0]);
-
-  // Determine start index based on skipFirstRow
   const startIndex = skipFirstRow ? 1 : 0;
 
-  // Process data rows
+  // Process rows
+  const { recordsToCreate, errors, failed } = processCSVRows(
+    lines,
+    startIndex,
+    headers,
+    mappings,
+    model
+  );
+
+  // Initialize results
   const results = {
     success: 0,
-    failed: 0,
-    errors: [] as string[],
+    failed,
+    errors,
   };
 
-  const modelDelegate = getPrismaModel(normalizeModelName(modelName));
-
-  const BATCH_SIZE = 10;
-  const recordsToCreate: Array<{ record: any; rowIndex: number }> = [];
-
-  // Process all rows and prepare records
-  for (let i = startIndex; i < lines.length; i++) {
-    const line = lines[i].trim();
-    if (!line) {
-      continue;
-    }
-
-    try {
-      const values = parseCSVLine(line);
-      const record: Record<string, any> = {};
-
-      // Map CSV values to model fields
-      headers.forEach((header, index) => {
-        const fieldName = mappings[header];
-        if (!fieldName) {
-          return;
-        }
-
-        const field = model.fields.find((f) => f.name === fieldName);
-        if (!field) {
-          return;
-        }
-
-        const value = values[index];
-        if (!value && field.required) {
-          throw new Error(`Missing required field: ${field.title}`);
-        }
-
-        // Convert value based on field type
-        record[fieldName] = convertValue(value, field);
-      });
-
-      // Check required fields
-      const requiredFields = model.fields.filter(
-        (f) => f.required && f.create && !f.isId
-      );
-      for (const field of requiredFields) {
-        if (!(field.name in record) || record[field.name] === null) {
-          throw new Error(`Missing required field: ${field.title}`);
-        }
-      }
-
-      recordsToCreate.push({ record, rowIndex: i });
-    } catch (error) {
-      results.failed++;
-      results.errors.push(
-        `Row ${i + 1}: ${error instanceof Error ? error.message : 'Unknown error'}`
-      );
-
-      // Stop after too many errors
-      if (results.errors.length >= 100) {
-        results.errors.push('Too many errors, import stopped');
-        break;
-      }
-    }
-  }
-
   // Create records in batches
+  const modelDelegate = getPrismaModel(normalizeModelName(modelName));
+  const BATCH_SIZE = 10;
+
   for (let i = 0; i < recordsToCreate.length; i += BATCH_SIZE) {
     const batch = recordsToCreate.slice(i, i + BATCH_SIZE);
 

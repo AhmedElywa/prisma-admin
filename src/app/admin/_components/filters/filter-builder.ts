@@ -1,6 +1,62 @@
 import type { WhereInput } from '@/lib/prisma-types';
 import type { FilterValue } from './types';
 
+// Helper function to build comparison operators
+function buildComparisonFilter(operator: string, value: any) {
+  const comparisons: Record<string, any> = {
+    lt: { lt: value },
+    lte: { lte: value },
+    gt: { gt: value },
+    gte: { gte: value },
+    not: { not: value },
+    in: { in: Array.isArray(value) ? value : [value] },
+    notIn: { notIn: Array.isArray(value) ? value : [value] },
+  };
+  return comparisons[operator];
+}
+
+// Helper function to build string operators
+function buildStringFilter(operator: string, value: any) {
+  const stringOps: Record<string, any> = {
+    contains: { contains: value, mode: 'insensitive' },
+    startsWith: { startsWith: value, mode: 'insensitive' },
+    endsWith: { endsWith: value, mode: 'insensitive' },
+    string_contains: { string_contains: value, mode: 'insensitive' },
+    string_starts_with: { string_starts_with: value, mode: 'insensitive' },
+    string_ends_with: { string_ends_with: value, mode: 'insensitive' },
+  };
+  return stringOps[operator];
+}
+
+// Helper function to build array operators
+function buildArrayFilter(operator: string, value: any) {
+  const arrayOps: Record<string, any> = {
+    array_contains: { array_contains: value },
+    array_starts_with: { array_starts_with: value },
+    array_ends_with: { array_ends_with: value },
+  };
+  return arrayOps[operator];
+}
+
+// Helper to build filter value
+function buildFilterValue(operator: string, value: any, type?: string) {
+  // Handle special cases
+  if (operator === 'equals') {
+    return value;
+  }
+  if (type === 'relation') {
+    return { [operator]: value };
+  }
+
+  // Try operator groups
+  const filter =
+    buildComparisonFilter(operator, value) ||
+    buildStringFilter(operator, value) ||
+    buildArrayFilter(operator, value);
+
+  return filter || value;
+}
+
 export function buildPrismaWhere(
   filters: FilterValue[]
 ): WhereInput | undefined {
@@ -13,111 +69,23 @@ export function buildPrismaWhere(
   for (const filter of filters) {
     const { field, operator, value, type } = filter;
 
-    // Handle null/not null operators
+    // Handle null operators
     if (operator === 'isNull') {
       where[field] = null;
       continue;
     }
-
     if (operator === 'isNotNull') {
       where[field] = { not: null };
       continue;
     }
 
-    // Skip if no value provided (except for null operators)
+    // Skip empty values
     if (value === undefined || value === null || value === '') {
       continue;
     }
 
-    // Handle relation filters
-    if (type === 'relation') {
-      where[field] = { [operator]: value };
-      continue;
-    }
-
-    // Build filter based on operator
-    switch (operator) {
-      case 'equals':
-        where[field] = value;
-        break;
-
-      case 'not':
-        where[field] = { not: value };
-        break;
-
-      case 'in':
-        where[field] = { in: Array.isArray(value) ? value : [value] };
-        break;
-
-      case 'notIn':
-        where[field] = { notIn: Array.isArray(value) ? value : [value] };
-        break;
-
-      case 'lt':
-        where[field] = { lt: value };
-        break;
-
-      case 'lte':
-        where[field] = { lte: value };
-        break;
-
-      case 'gt':
-        where[field] = { gt: value };
-        break;
-
-      case 'gte':
-        where[field] = { gte: value };
-        break;
-
-      case 'contains':
-        where[field] = {
-          contains: value,
-          mode: 'insensitive',
-        };
-        break;
-
-      case 'startsWith':
-        where[field] = {
-          startsWith: value,
-          mode: 'insensitive',
-        };
-        break;
-
-      case 'endsWith':
-        where[field] = {
-          endsWith: value,
-          mode: 'insensitive',
-        };
-        break;
-
-      // JSON specific operators
-      case 'string_contains':
-        where[field] = { string_contains: value, mode: 'insensitive' };
-        break;
-
-      case 'string_starts_with':
-        where[field] = { string_starts_with: value, mode: 'insensitive' };
-        break;
-
-      case 'string_ends_with':
-        where[field] = { string_ends_with: value, mode: 'insensitive' };
-        break;
-
-      case 'array_contains':
-        where[field] = { array_contains: value };
-        break;
-
-      case 'array_starts_with':
-        where[field] = { array_starts_with: value };
-        break;
-
-      case 'array_ends_with':
-        where[field] = { array_ends_with: value };
-        break;
-
-      default:
-        where[field] = value;
-    }
+    // Build and assign filter value
+    where[field] = buildFilterValue(operator, value, type);
   }
 
   return Object.keys(where).length > 0 ? where : undefined;

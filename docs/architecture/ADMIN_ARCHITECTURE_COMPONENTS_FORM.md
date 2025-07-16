@@ -4,9 +4,13 @@ This document details the form-related components in `src/app/admin/_components/
 
 ## Files Covered
 - `form-generator.tsx` - Automatic form generation
+- `form-generator-advanced.tsx` - Advanced form with field grouping
+- `form-section.tsx` - Form field sectioning
 - `form-field.tsx` - Individual field rendering
+- `inline-create-form.tsx` - Inline record creation
 - `relation-select.tsx` - Relation field selection
 - `relation-connect.tsx` - Many-to-many connections
+- `relation-picker.tsx` - Dialog-based relation selector
 - `json-editor.tsx` - JSON field editing
 - `array-field.tsx` - Array value management
 
@@ -323,12 +327,112 @@ const fields = await getFormFieldsData(modelName)
 - Loading: skeleton animation
 - Focus: ring styles
 
+## 7. form-generator-advanced.tsx - Intelligent Field Grouping
+
+### Features
+
+#### Smart Field Organization
+Uses `groupFormFields()` utility to organize fields into sections:
+- **Basic Information**: Name, title, email fields
+- **Relationships**: All relation fields
+- **Additional Data**: JSON, array, and other complex fields
+- **System Information**: Created/updated timestamps
+
+#### Section-Based Rendering
+```typescript
+const sections = groupFormFields(fields)
+return (
+  <>
+    {sections.map(section => (
+      <FormSection key={section.title} {...section}>
+        {/* Renders fields in 2-column grid */}
+      </FormSection>
+    ))}
+  </>
+)
+```
+
+#### Automatic Layout
+- Full-width for complex fields (JSON, rich text, arrays)
+- 2-column grid for simple fields
+- Responsive single column on mobile
+
+## 8. form-section.tsx - Visual Field Grouping
+
+### Component Props
+```typescript
+interface FormSectionProps {
+  title: string
+  description?: string
+  children: React.ReactNode
+}
+```
+
+### Features
+- Card-based visual separation
+- Section titles and descriptions
+- Consistent spacing between sections
+- Collapsible sections (planned)
+
+## 9. inline-create-form.tsx - Modal Record Creation
+
+### Features
+
+#### Quick Creation
+- Create related records without navigation
+- Automatically links to parent record
+- Minimal form with essential fields only
+
+#### Modal Integration
+```typescript
+interface InlineCreateFormProps {
+  relatedModel: string
+  parentField: string
+  parentId: string | number
+  onSuccess: (record: any) => void
+  fields?: string[] // Specific fields to show
+}
+```
+
+#### Use Cases
+- Adding tags while editing a post
+- Creating categories on the fly
+- Quick user creation in assignments
+
+## 10. relation-picker.tsx - Dialog Relation Selector
+
+### Features
+
+#### Spacious Selection UI
+- Full dialog for better visibility
+- Search with pagination
+- Shows multiple display fields
+- Preview of selected items
+
+#### Advanced Selection
+```typescript
+interface RelationPickerProps {
+  relatedModel: string
+  value: string | string[]
+  onChange: (value: string | string[]) => void
+  multiple?: boolean
+  searchFields?: string[]
+}
+```
+
+#### Benefits Over Dropdown
+- Better for long lists
+- Shows more context
+- Supports complex search
+- Better mobile experience
+
 ## Performance Notes
 
 1. **Dynamic imports**: Heavy components lazy loaded
 2. **Debounced search**: Prevents excessive queries
 3. **Uncontrolled forms**: Better performance
 4. **Server-side processing**: No client validation overhead
+5. **Intelligent grouping**: Reduces visual complexity
 
 ## Accessibility
 
@@ -337,3 +441,4 @@ const fields = await getFormFieldsData(modelName)
 - Keyboard navigation support
 - Error announcements
 - Loading announcements
+- Section landmarks for screen readers

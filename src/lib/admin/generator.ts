@@ -185,6 +185,99 @@ export async function generateAdminSettings(
   return settings;
 }
 
+// Helper function to merge field settings
+function mergeFieldSettings(
+  newField: AdminField,
+  existingField: AdminField
+): AdminField {
+  return {
+    ...newField,
+    title: existingField.title,
+    order: existingField.order,
+    read: existingField.read,
+    filter: existingField.filter,
+    sort: existingField.sort,
+    create: existingField.create,
+    update: existingField.update,
+    editor: existingField.editor,
+    upload: existingField.upload,
+    // Preserve relation settings if they exist
+    relationDisplayMode:
+      existingField.relationDisplayMode || newField.relationDisplayMode,
+    relationActions: existingField.relationActions || newField.relationActions,
+    relationEditMode:
+      existingField.relationEditMode || newField.relationEditMode,
+    relationEditOptions:
+      existingField.relationEditOptions || newField.relationEditOptions,
+    relationLoadStrategy:
+      existingField.relationLoadStrategy || newField.relationLoadStrategy,
+    relationCacheTTL:
+      existingField.relationCacheTTL || newField.relationCacheTTL,
+  };
+}
+
+// Helper function to process model fields
+function processModelFields(
+  newModel: AdminModel,
+  existingModel: AdminModel | undefined,
+  newSettings: AdminSettings
+): AdminField[] {
+  if (!existingModel) {
+    return newModel.fields;
+  }
+
+  const existingFieldsMap = new Map(
+    existingModel.fields.map((f) => [f.name, f])
+  );
+  const mergedFields: AdminField[] = [];
+
+  // Process fields
+  for (const newField of newModel.fields) {
+    const existingField = existingFieldsMap.get(newField.name);
+    if (existingField) {
+      mergedFields.push(mergeFieldSettings(newField, existingField));
+    } else {
+      mergedFields.push(newField);
+    }
+  }
+
+  // Collect and hide foreign key fields
+  const foreignKeyFields = new Set<string>();
+  const dmmfModel = newSettings.models.find((m) => m.id === newModel.id);
+  if (dmmfModel) {
+    dmmfModel.fields.forEach((field) => {
+      if (field.relationFrom) {
+        foreignKeyFields.add(field.relationFrom);
+      }
+    });
+  }
+
+  return mergedFields.map((field) => {
+    if (foreignKeyFields.has(field.name)) {
+      return { ...field, read: false };
+    }
+    return field;
+  });
+}
+
+// Helper function to merge model settings
+function mergeModelSettings(
+  newModel: AdminModel,
+  existingModel: AdminModel | undefined
+): Partial<AdminModel> {
+  if (!existingModel) {
+    return {};
+  }
+
+  return {
+    name: existingModel.name,
+    displayFields: existingModel.displayFields,
+    create: existingModel.create,
+    update: existingModel.update,
+    delete: existingModel.delete,
+  };
+}
+
 // Merge existing settings with new schema
 export async function mergeAdminSettings(
   schemaPath = './prisma/schema.prisma',
@@ -204,102 +297,28 @@ export async function mergeAdminSettings(
     return newSettings;
   }
 
-  // Merge settings
-  const mergedSettings: AdminSettings = {
-    models: [],
-    enums: newSettings.enums,
-  };
-
   // Create maps for easy lookup
   const existingModelsMap = new Map(
     existingSettings?.models.map((m) => [m.id, m]) || []
   );
 
   // Process each model
-  for (const newModel of newSettings.models) {
+  const mergedModels = newSettings.models.map((newModel) => {
     const existingModel = existingModelsMap.get(newModel.id);
+    const fields = processModelFields(newModel, existingModel, newSettings);
+    const modelOverrides = mergeModelSettings(newModel, existingModel);
 
-    if (existingModel) {
-      // Existing model, merge fields
-      const existingFieldsMap = new Map(
-        existingModel.fields.map((f) => [f.name, f])
-      );
+    return {
+      ...newModel,
+      ...modelOverrides,
+      fields: fields.sort((a, b) => a.order - b.order),
+    };
+  });
 
-      const mergedFields: AdminField[] = [];
-
-      // Process fields
-      for (const newField of newModel.fields) {
-        const existingField = existingFieldsMap.get(newField.name);
-
-        if (existingField) {
-          // Existing field - preserve customizations
-          const mergedField: AdminField = {
-            ...newField,
-            title: existingField.title,
-            order: existingField.order,
-            read: existingField.read,
-            filter: existingField.filter,
-            sort: existingField.sort,
-            create: existingField.create,
-            update: existingField.update,
-            editor: existingField.editor,
-            upload: existingField.upload,
-            // Preserve relation settings if they exist
-            relationDisplayMode:
-              existingField.relationDisplayMode || newField.relationDisplayMode,
-            relationActions:
-              existingField.relationActions || newField.relationActions,
-            relationEditMode:
-              existingField.relationEditMode || newField.relationEditMode,
-            relationEditOptions:
-              existingField.relationEditOptions || newField.relationEditOptions,
-            relationLoadStrategy:
-              existingField.relationLoadStrategy ||
-              newField.relationLoadStrategy,
-            relationCacheTTL:
-              existingField.relationCacheTTL || newField.relationCacheTTL,
-          };
-          mergedFields.push(mergedField);
-        } else {
-          // New field
-          mergedFields.push(newField);
-        }
-      }
-
-      // Collect foreign key field names for this model from DMMF
-      const dmmfModel = newSettings.models.find((m) => m.id === newModel.id);
-      const foreignKeyFields = new Set<string>();
-      if (dmmfModel) {
-        dmmfModel.fields.forEach((field) => {
-          if (field.relationFrom) {
-            foreignKeyFields.add(field.relationFrom);
-          }
-        });
-      }
-
-      // Apply foreign key hiding to merged fields
-      const processedFields = mergedFields.map((field) => {
-        if (foreignKeyFields.has(field.name)) {
-          return { ...field, read: false };
-        }
-        return field;
-      });
-
-      // Add merged model
-      mergedSettings.models.push({
-        ...newModel,
-        name: existingModel.name,
-        displayFields: existingModel.displayFields,
-        create: existingModel.create,
-        update: existingModel.update,
-        delete: existingModel.delete,
-        fields: processedFields.sort((a, b) => a.order - b.order),
-      });
-    } else {
-      // New model, add it
-      mergedSettings.models.push(newModel);
-    }
-  }
+  const mergedSettings: AdminSettings = {
+    models: mergedModels,
+    enums: newSettings.enums,
+  };
 
   // Save merged settings
   await fs.writeFile(

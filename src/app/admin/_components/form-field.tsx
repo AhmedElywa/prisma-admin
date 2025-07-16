@@ -127,22 +127,292 @@ const InputField = ({
   </FieldWrapper>
 );
 
-export function FormField({
+// Helper components for specific field types
+const BooleanField = ({ name, label, defaultValue, disabled }: any) => (
+  <div className="flex items-center space-x-2">
+    <Checkbox
+      defaultChecked={defaultValue === true}
+      disabled={disabled}
+      id={name}
+      name={name}
+      value="true"
+    />
+    <Label className="cursor-pointer" htmlFor={name}>
+      {label}
+    </Label>
+  </div>
+);
+
+const SelectField = ({
   name,
   label,
-  type,
   defaultValue,
-  required = false,
-  options = [],
+  disabled,
+  required,
   placeholder,
-  disabled = false,
-  relatedModel,
-  accept,
-  multiple = false,
-  fieldType,
-  field,
-  inModal = false,
-}: FormFieldProps) {
+  options,
+}: any) => (
+  <div className="space-y-2">
+    <Label htmlFor={name}>
+      {label}
+      {required && <span className="ml-1 text-red-500">*</span>}
+    </Label>
+    <Select
+      defaultValue={defaultValue?.toString()}
+      disabled={disabled}
+      name={name}
+    >
+      <SelectTrigger>
+        <SelectValue placeholder={placeholder || `Select ${label}`} />
+      </SelectTrigger>
+      <SelectContent>
+        {!required && <SelectItem value="">None</SelectItem>}
+        {options.map((option: string) => (
+          <SelectItem key={option} value={option}>
+            {option}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  </div>
+);
+
+const DateTimeField = ({
+  name,
+  label,
+  defaultValue,
+  disabled,
+  required,
+}: any) => (
+  <FieldWrapper label={label} name={name} required={required}>
+    <Input
+      defaultValue={
+        defaultValue ? new Date(defaultValue).toISOString().slice(0, 16) : ''
+      }
+      disabled={disabled}
+      id={name}
+      name={name}
+      required={required}
+      type="datetime-local"
+    />
+  </FieldWrapper>
+);
+
+const TextAreaField = ({
+  name,
+  label,
+  defaultValue,
+  disabled,
+  required,
+  placeholder,
+  rows,
+}: any) => (
+  <FieldWrapper label={label} name={name} required={required}>
+    <Textarea
+      defaultValue={defaultValue}
+      disabled={disabled}
+      id={name}
+      name={name}
+      placeholder={placeholder}
+      required={required}
+      rows={rows}
+    />
+  </FieldWrapper>
+);
+
+// Field type configuration
+type FieldConfig = {
+  component: React.ComponentType<any>;
+  props?: (props: FormFieldProps) => Record<string, any>;
+};
+
+// Special component for richtext that needs wrapper
+const RichTextFieldWrapper = (props: any) => (
+  <FieldWrapper label={props.label} name={props.name} required={props.required}>
+    <RichTextEditor
+      minHeight={props.minHeight}
+      name={props.name}
+      placeholder={props.placeholder}
+      value={props.value}
+    />
+  </FieldWrapper>
+);
+
+// Map of field types to their components and prop transformers
+const fieldTypeMap: Record<string, FieldConfig> = {
+  boolean: {
+    component: BooleanField,
+    props: ({ defaultValue, disabled, label, name }) => ({
+      defaultValue,
+      disabled,
+      label,
+      name,
+    }),
+  },
+  json: {
+    component: JsonEditor,
+    props: ({ defaultValue, inModal, label, name, required }) => ({
+      defaultValue,
+      height: inModal ? '500px' : '400px',
+      label,
+      name,
+      required,
+    }),
+  },
+  select: {
+    component: SelectField,
+    props: ({
+      defaultValue,
+      disabled,
+      label,
+      name,
+      options,
+      placeholder,
+      required,
+    }) => ({
+      defaultValue,
+      disabled,
+      label,
+      name,
+      options,
+      placeholder,
+      required,
+    }),
+  },
+  datetime: {
+    component: DateTimeField,
+    props: ({ defaultValue, disabled, label, name, required }) => ({
+      defaultValue,
+      disabled,
+      label,
+      name,
+      required,
+    }),
+  },
+  richtext: {
+    component: RichTextFieldWrapper,
+    props: ({ defaultValue, inModal, label, name, placeholder, required }) => ({
+      minHeight: inModal ? '300px' : '200px',
+      name,
+      placeholder,
+      value: defaultValue,
+      label,
+      required,
+    }),
+  },
+  file: {
+    component: FileUpload,
+    props: ({ accept, label, multiple, name, required, defaultValue }) => ({
+      accept,
+      label,
+      multiple,
+      name,
+      required,
+      value: defaultValue,
+    }),
+  },
+  upload: {
+    component: FileUpload,
+    props: ({ accept, label, multiple, name, required, defaultValue }) => ({
+      accept,
+      label,
+      multiple,
+      name,
+      required,
+      value: defaultValue,
+    }),
+  },
+  textarea: {
+    component: TextAreaField,
+    props: ({
+      defaultValue,
+      disabled,
+      label,
+      name,
+      placeholder,
+      required,
+      inModal,
+    }) => ({
+      defaultValue,
+      disabled,
+      label,
+      name,
+      placeholder,
+      required,
+      rows: inModal ? 8 : 4,
+    }),
+  },
+  editor: {
+    component: TextAreaField,
+    props: ({
+      defaultValue,
+      disabled,
+      label,
+      name,
+      placeholder,
+      required,
+      inModal,
+    }) => ({
+      defaultValue,
+      disabled,
+      label,
+      name,
+      placeholder,
+      required,
+      rows: inModal ? 15 : 10,
+    }),
+  },
+  array: {
+    component: ArrayField,
+    props: ({
+      label,
+      name,
+      placeholder,
+      required,
+      fieldType,
+      defaultValue,
+    }) => ({
+      label,
+      name,
+      placeholder,
+      required,
+      type: fieldType as
+        | 'String'
+        | 'Int'
+        | 'Float'
+        | 'Boolean'
+        | 'DateTime'
+        | 'Json',
+      value: defaultValue,
+    }),
+  },
+};
+
+// Get field configuration
+function getFieldConfig(type: string, props: FormFieldProps): React.ReactNode {
+  const config = fieldTypeMap[type];
+  if (config) {
+    const Component = config.component;
+    const componentProps = config.props ? config.props(props) : props;
+    return <Component {...componentProps} />;
+  }
+  return null;
+}
+
+// Main FormField component
+export function FormField(props: FormFieldProps) {
+  const {
+    name,
+    label,
+    type,
+    defaultValue,
+    required = false,
+    placeholder,
+    disabled = false,
+    relatedModel,
+    field,
+  } = props;
+
   // Check for custom renderer first
   if (field) {
     const customRenderer = getFieldRenderer(field);
@@ -160,241 +430,76 @@ export function FormField({
     }
   }
 
-  switch (type) {
-    case 'boolean':
-      return (
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            defaultChecked={defaultValue === true}
-            disabled={disabled}
-            id={name}
-            name={name}
-            value="true"
-          />
-          <Label className="cursor-pointer" htmlFor={name}>
-            {label}
-          </Label>
-        </div>
-      );
+  // Try to get field from map
+  const fieldComponent = getFieldConfig(type, props);
+  if (fieldComponent) {
+    return fieldComponent;
+  }
 
-    case 'json':
-      return (
-        <JsonEditor
-          defaultValue={defaultValue}
-          height={inModal ? '500px' : '400px'}
-          label={label}
-          name={name}
-          required={required}
-        />
-      );
-
-    case 'select':
-      return (
-        <div className="space-y-2">
-          <Label htmlFor={name}>
-            {label}
-            {required && <span className="ml-1 text-red-500">*</span>}
-          </Label>
-          <Select
-            defaultValue={defaultValue?.toString()}
-            disabled={disabled}
-            name={name}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={placeholder || `Select ${label}`} />
-            </SelectTrigger>
-            <SelectContent>
-              {!required && <SelectItem value="">None</SelectItem>}
-              {options.map((option) => (
-                <SelectItem key={option} value={option}>
-                  {option}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      );
-
-    case 'datetime':
-      return (
-        <FieldWrapper label={label} name={name} required={required}>
-          <Input
-            defaultValue={
-              defaultValue
-                ? new Date(defaultValue).toISOString().slice(0, 16)
-                : ''
-            }
-            disabled={disabled}
-            id={name}
-            name={name}
-            required={required}
-            type="datetime-local"
-          />
-        </FieldWrapper>
-      );
-
-    case 'richtext':
-      return (
-        <FieldWrapper label={label} name={name} required={required}>
-          <RichTextEditor
-            minHeight={inModal ? '300px' : '200px'}
-            name={name}
-            placeholder={placeholder}
-            value={defaultValue}
-          />
-        </FieldWrapper>
-      );
-
-    case 'file':
-    case 'upload':
-      return (
-        <FileUpload
-          accept={accept}
-          label={label}
-          multiple={multiple}
-          name={name}
-          required={required}
-          value={defaultValue}
-        />
-      );
-
-    case 'textarea':
-    case 'editor':
-      return (
-        <FieldWrapper label={label} name={name} required={required}>
-          <Textarea
-            defaultValue={defaultValue}
-            disabled={disabled}
-            id={name}
-            name={name}
-            placeholder={placeholder}
-            required={required}
-            rows={
-              inModal
-                ? type === 'editor'
-                  ? 15
-                  : 8
-                : type === 'editor'
-                  ? 10
-                  : 4
-            }
-          />
-        </FieldWrapper>
-      );
-
-    case 'number':
+  // Handle relation type
+  if (type === 'relation') {
+    if (!(relatedModel && field)) {
       return (
         <InputField
           defaultValue={defaultValue}
           disabled={disabled}
           label={label}
           name={name}
-          placeholder={placeholder}
-          required={required}
-          step="any"
-          type="number"
-        />
-      );
-
-    case 'email':
-      return (
-        <InputField
-          defaultValue={defaultValue}
-          disabled={disabled}
-          label={label}
-          name={name}
-          placeholder={placeholder || 'email@example.com'}
-          required={required}
-          type="email"
-        />
-      );
-
-    case 'password':
-      return (
-        <InputField
-          defaultValue={defaultValue}
-          disabled={disabled}
-          label={label}
-          name={name}
-          placeholder={placeholder || '••••••••'}
-          required={required}
-          type="password"
-        />
-      );
-
-    case 'url':
-      return (
-        <InputField
-          defaultValue={defaultValue}
-          disabled={disabled}
-          label={label}
-          name={name}
-          placeholder={placeholder || 'https://example.com'}
-          required={required}
-          type="url"
-        />
-      );
-
-    case 'relation':
-      if (!(relatedModel && field)) {
-        // Fallback to text input if no related model or field metadata specified
-        return (
-          <InputField
-            defaultValue={defaultValue}
-            disabled={disabled}
-            label={label}
-            name={name}
-            placeholder={placeholder || `Enter ${label} ID`}
-            required={required}
-            type="text"
-          />
-        );
-      }
-
-      // Use the new configurable relation edit field
-      return (
-        <RelationEditField
-          disabled={disabled}
-          field={field}
-          label={label}
-          name={name}
-          placeholder={placeholder}
-          relatedModel={relatedModel}
-          required={required}
-          value={defaultValue}
-        />
-      );
-
-    case 'array':
-      return (
-        <ArrayField
-          label={label}
-          name={name}
-          placeholder={placeholder}
-          required={required}
-          type={
-            fieldType as
-              | 'String'
-              | 'Int'
-              | 'Float'
-              | 'Boolean'
-              | 'DateTime'
-              | 'Json'
-          }
-          value={defaultValue}
-        />
-      );
-    default:
-      return (
-        <InputField
-          defaultValue={defaultValue}
-          disabled={disabled}
-          label={label}
-          name={name}
-          placeholder={placeholder}
+          placeholder={placeholder || `Enter ${label} ID`}
           required={required}
           type="text"
         />
       );
+    }
+    return (
+      <RelationEditField
+        disabled={disabled}
+        field={field}
+        label={label}
+        name={name}
+        placeholder={placeholder}
+        relatedModel={relatedModel}
+        required={required}
+        value={defaultValue}
+      />
+    );
   }
+
+  // Default to input field with type mapping
+  return renderStandardInput(props);
+}
+
+// Helper function to render standard input fields
+function renderStandardInput(props: FormFieldProps) {
+  const { type, placeholder, defaultValue, disabled, label, name, required } =
+    props;
+
+  const inputTypeMap: Record<string, string> = {
+    number: 'number',
+    email: 'email',
+    password: 'password',
+    url: 'url',
+  };
+
+  const placeholderMap: Record<string, string> = {
+    email: 'email@example.com',
+    password: '••••••••',
+    url: 'https://example.com',
+  };
+
+  const inputType = inputTypeMap[type] || 'text';
+  const inputPlaceholder = placeholder || placeholderMap[type] || placeholder;
+
+  return (
+    <InputField
+      defaultValue={defaultValue}
+      disabled={disabled}
+      label={label}
+      name={name}
+      placeholder={inputPlaceholder}
+      required={required}
+      step={type === 'number' ? 'any' : undefined}
+      type={inputType}
+    />
+  );
 }

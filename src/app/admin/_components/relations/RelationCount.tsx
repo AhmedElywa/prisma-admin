@@ -41,6 +41,43 @@ export function RelationCount({
     }
   }
 
+  // Helper function to create filter based on relation type
+  const createRelationFilter = (
+    parentId: string | number,
+    isManyToMany: boolean
+  ) => {
+    const normalizedId =
+      typeof parentId === 'string'
+        ? Number.parseInt(parentId, 10) || parentId
+        : parentId;
+
+    if (isManyToMany && field.inverseRelationField) {
+      // For many-to-many, use 'some' operator with the inverse relation field
+      return {
+        field: field.inverseRelationField,
+        operator: 'some',
+        value: { id: normalizedId },
+        type: 'relation',
+      };
+    }
+
+    if (field.inverseRelationField) {
+      // For one-to-many or many-to-one, use the foreign key field
+      return {
+        field: field.inverseRelationField,
+        operator: 'equals',
+        value: normalizedId,
+      };
+    }
+
+    // Fallback for backward compatibility
+    return {
+      field: `${modelName.toLowerCase()}Id`,
+      operator: 'equals',
+      value: normalizedId,
+    };
+  };
+
   const handleClick = () => {
     if (!shouldShowAction(field, 'viewAll')) {
       return;
@@ -48,64 +85,23 @@ export function RelationCount({
 
     // Navigate to related model filtered by this record
     const relationModel = field.type.toLowerCase();
-
-    // Get the parent record ID
     const parentId = rowId || window.location.pathname.split('/').at(-1);
 
-    if (onNavigate && parentId) {
-      onNavigate(relationModel, parentId);
-    } else if (parentId) {
-      const params = new URLSearchParams();
-
-      // Check if this is a many-to-many relation (list field with no relationFrom)
-      const isManyToMany = field.list && !field.relationFrom;
-
-      let filter: {
-        field: string;
-        operator: string;
-        value: any;
-        type?: string;
-      };
-      if (isManyToMany && field.inverseRelationField) {
-        // For many-to-many, use 'some' operator with the inverse relation field
-        // e.g., when viewing tags of a post, filter tags where posts.some(id = postId)
-        filter = {
-          field: field.inverseRelationField,
-          operator: 'some',
-          value: {
-            id:
-              typeof parentId === 'string'
-                ? Number.parseInt(parentId, 10) || parentId
-                : parentId,
-          },
-          type: 'relation',
-        };
-      } else if (field.inverseRelationField) {
-        // For one-to-many or many-to-one, use the foreign key field
-        filter = {
-          field: field.inverseRelationField,
-          operator: 'equals',
-          value:
-            typeof parentId === 'string'
-              ? Number.parseInt(parentId, 10) || parentId
-              : parentId,
-        };
-      } else {
-        // Fallback for backward compatibility
-        const filterField = `${modelName.toLowerCase()}Id`;
-        filter = {
-          field: filterField,
-          operator: 'equals',
-          value:
-            typeof parentId === 'string'
-              ? Number.parseInt(parentId, 10) || parentId
-              : parentId,
-        };
-      }
-
-      params.set('filters', JSON.stringify([filter]));
-      router.push(`/admin/${relationModel}?${params.toString()}`);
+    if (!parentId) {
+      return;
     }
+
+    if (onNavigate) {
+      onNavigate(relationModel, parentId);
+      return;
+    }
+
+    const isManyToMany = field.list && !field.relationFrom;
+    const filter = createRelationFilter(parentId, isManyToMany);
+
+    const params = new URLSearchParams();
+    params.set('filters', JSON.stringify([filter]));
+    router.push(`/admin/${relationModel}?${params.toString()}`);
   };
 
   const previewLimit = 5;

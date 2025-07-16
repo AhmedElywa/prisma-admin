@@ -22,11 +22,13 @@ export default defineConfig({
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: [['html', { open: 'never' }]],
+  reporter: process.env.CI
+    ? [['list'], ['html', { open: 'never' }]]
+    : [['html', { open: 'never' }]],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: 'http://localhost:3000',
+    baseURL: process.env.CI ? 'http://localhost:3000' : 'http://localhost:3000',
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
@@ -38,15 +40,18 @@ export default defineConfig({
     video: 'retain-on-failure',
 
     /* Test timeout */
-    actionTimeout: 10_000,
+    actionTimeout: process.env.CI ? 15_000 : 10_000,
+
+    /* Navigation timeout */
+    navigationTimeout: process.env.CI ? 30_000 : 30_000,
   },
 
   /* Test timeout */
-  timeout: 30_000,
+  timeout: process.env.CI ? 60_000 : 30_000,
 
   /* Expect timeout */
   expect: {
-    timeout: 5000,
+    timeout: process.env.CI ? 10_000 : 5000,
   },
 
   /* Configure projects for major browsers */
@@ -89,11 +94,11 @@ export default defineConfig({
 
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'pnpm dev',
+    command: process.env.CI ? 'bun run start' : 'bun run dev',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
-    stdout: 'pipe',
-    stderr: 'pipe',
+    stdout: process.env.CI ? 'ignore' : 'pipe',
+    stderr: process.env.CI ? 'ignore' : 'pipe',
   },
 });
