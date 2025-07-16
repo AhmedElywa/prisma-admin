@@ -330,7 +330,9 @@ export async function mergeAdminSettings(
   // Clean up temp file
   try {
     await fs.unlink('temp.json');
-  } catch {}
+  } catch {
+    // ignore
+  }
 
   return mergedSettings;
 }

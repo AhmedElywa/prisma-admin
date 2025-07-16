@@ -33,8 +33,18 @@ export class TestDataHelper {
       await this.formPage.fillField('Content', post.content);
     }
 
-    // Handle published checkbox
-    await this.formPage.toggleCheckbox('Published', post.published);
+    // Handle published checkbox - try different label variations
+    try {
+      await this.formPage.toggleCheckbox('Published', post.published);
+    } catch (_error) {
+      // Try lowercase if uppercase fails
+      try {
+        await this.formPage.toggleCheckbox('published', post.published);
+      } catch (_error2) {
+        // Try with asterisk for required field
+        await this.formPage.toggleCheckbox('Published *', post.published);
+      }
+    }
 
     // Submit and wait for success
     await this.formPage.submit();

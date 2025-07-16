@@ -8,13 +8,13 @@ test.describe('Boolean Filter Tests', () => {
   let listPage: ModelListPage;
   let filterPanel: FilterPanel;
   let formPage: ModelFormPage;
-  let testData: TestDataHelper;
+  let _testData: TestDataHelper;
 
   test.beforeEach(async ({ page }) => {
     listPage = new ModelListPage(page);
     filterPanel = new FilterPanel(page);
     formPage = new ModelFormPage(page);
-    testData = new TestDataHelper(page);
+    _testData = new TestDataHelper(page);
 
     await page.goto('/admin/post');
     await page.waitForLoadState('networkidle');

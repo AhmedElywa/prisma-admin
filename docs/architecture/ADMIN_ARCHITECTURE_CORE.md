@@ -530,7 +530,7 @@ Used when clicking "View All" in relation displays:
 - Navigates to filtered list view
 - Maintains context of parent record
 
-## Integration Notes
+## Relation Helpers Integration Notes
 
 1. **Settings Loading**: Settings are cached per request using React's `cache()` function
 2. **File Location**: Settings file path is configurable but defaults to `adminSettings.json`

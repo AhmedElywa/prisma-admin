@@ -150,16 +150,21 @@ export function RelationFieldSettings({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {getValidDisplayModes(relationType).filter(Boolean).map((mode) => mode && (
-                  <SelectItem key={mode} value={mode}>
-                    {mode === 'dropdown' && 'Dropdown (with actions)'}
-                    {mode === 'tags' && 'Tags (pills)'}
-                    {mode === 'count' && 'Count (with preview)'}
-                    {mode === 'inline' && 'Inline (full display)'}
-                    {mode === 'badge' && 'Badge (compact)'}
-                    {mode === 'link' && 'Link (simple)'}
-                  </SelectItem>
-                ))}
+                {getValidDisplayModes(relationType)
+                  .filter(Boolean)
+                  .map(
+                    (mode) =>
+                      mode && (
+                        <SelectItem key={mode} value={mode}>
+                          {mode === 'dropdown' && 'Dropdown (with actions)'}
+                          {mode === 'tags' && 'Tags (pills)'}
+                          {mode === 'count' && 'Count (with preview)'}
+                          {mode === 'inline' && 'Inline (full display)'}
+                          {mode === 'badge' && 'Badge (compact)'}
+                          {mode === 'link' && 'Link (simple)'}
+                        </SelectItem>
+                      )
+                  )}
               </SelectContent>
             </Select>
             <p className="text-muted-foreground text-sm">
