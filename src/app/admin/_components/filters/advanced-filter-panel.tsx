@@ -191,7 +191,7 @@ export function AdvancedFilterPanel({
               Relation Filters
             </Label>
             <Button onClick={addRelationFilter} size="sm" variant="outline">
-              <Plus className="mr-1 h-4 w-4" />
+              <Plus className="me-1 h-4 w-4" />
               Add Relation
             </Button>
           </div>
@@ -238,7 +238,7 @@ export function AdvancedFilterPanel({
               Field Filters
             </Label>
             <Button onClick={addFieldFilter} size="sm" variant="outline">
-              <Plus className="mr-1 h-4 w-4" />
+              <Plus className="me-1 h-4 w-4" />
               Add Filter
             </Button>
           </div>

@@ -80,7 +80,7 @@ export function RelationPicker({
     <div className="space-y-2">
       <Label htmlFor={name}>
         {label}
-        {required && <span className="ml-1 text-red-500">*</span>}
+        {required && <span className="ms-1 text-red-500">*</span>}
       </Label>
 
       <input name={name} type="hidden" value={selectedItem?.id || ''} />
@@ -132,7 +132,7 @@ export function RelationPicker({
                   <div className="divide-y">
                     {items.map((item) => (
                       <button
-                        className="flex w-full items-center justify-between p-3 text-left transition-colors hover:bg-accent"
+                        className="flex w-full items-center justify-between p-3 text-start transition-colors hover:bg-accent"
                         key={item.id}
                         onClick={() => selectItem(item)}
                         type="button"

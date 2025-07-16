@@ -155,7 +155,7 @@ export function SettingsClient({ settings }: SettingsClientProps) {
                   >
                     <PopoverTrigger asChild>
                       <Button
-                        className="w-full justify-between text-left font-normal hover:bg-transparent"
+                        className="w-full justify-between text-start font-normal hover:bg-transparent"
                         size="lg"
                         variant="outline"
                       >
@@ -167,13 +167,13 @@ export function SettingsClient({ settings }: SettingsClientProps) {
                               );
                               return field ? (
                                 <Badge
-                                  className="mr-1 rounded-full"
+                                  className="me-1 rounded-full"
                                   key={fieldName}
                                   variant="secondary"
                                 >
                                   {field.title}
                                   <span
-                                    className="ml-1 inline-flex cursor-pointer rounded-full p-0.5 hover:bg-destructive/20"
+                                    className="ms-1 inline-flex cursor-pointer rounded-full p-0.5 hover:bg-destructive/20"
                                     onClick={(e) => {
                                       e.preventDefault();
                                       e.stopPropagation();
@@ -214,7 +214,7 @@ export function SettingsClient({ settings }: SettingsClientProps) {
                             </span>
                           )}
                         </div>
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        <ChevronsUpDown className="ms-2 h-4 w-4 shrink-0 opacity-50 rtl:scale-x-[-1]" />
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent align="start" className="w-full p-0">
@@ -254,7 +254,7 @@ export function SettingsClient({ settings }: SettingsClientProps) {
                                   checked={currentModel.displayFields.includes(
                                     field.name
                                   )}
-                                  className="mr-2"
+                                  className="me-2"
                                 />
                                 {field.title}
                               </CommandItem>
@@ -268,7 +268,7 @@ export function SettingsClient({ settings }: SettingsClientProps) {
                 {/* Permissions */}
                 <div className="space-y-2">
                   <Label>Model Permissions</Label>
-                  <div className="flex h-10 items-center space-x-4 rounded-md border px-2.5 shadow-xs">
+                  <div className="flex h-10 items-center gap-4 rounded-md border px-2.5 shadow-xs">
                     <label className="flex cursor-pointer items-center gap-2">
                       <Checkbox
                         checked={currentModel.create}

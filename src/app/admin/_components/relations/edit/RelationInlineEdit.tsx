@@ -64,7 +64,7 @@ export function RelationInlineEdit({
     <div className="space-y-2">
       <Label>
         {label}
-        {required && <span className="ml-1 text-red-500">*</span>}
+        {required && <span className="ms-1 text-red-500">*</span>}
       </Label>
 
       {isOneToOne && selectedValue ? (
@@ -102,7 +102,7 @@ export function RelationInlineEdit({
               type="button"
               variant="outline"
             >
-              <Plus className="mr-1 h-4 w-4" />
+              <Plus className="me-1 h-4 w-4" />
               Create New
             </Button>
           )}

@@ -153,7 +153,7 @@ export function RelationAutocomplete({
     <div className="space-y-2">
       <Label htmlFor={name}>
         {label}
-        {required && <span className="ml-1 text-red-500">*</span>}
+        {required && <span className="ms-1 text-red-500">*</span>}
       </Label>
 
       <Popover onOpenChange={setOpen} open={open}>
@@ -165,7 +165,7 @@ export function RelationAutocomplete({
             variant="outline"
           >
             {selectedDisplay || placeholder || `Search ${label}...`}
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            <ChevronsUpDown className="ms-2 h-4 w-4 shrink-0 opacity-50 rtl:scale-x-[-1]" />
           </Button>
         </PopoverTrigger>
         <PopoverContent align="start" className="w-full p-0">
@@ -201,7 +201,7 @@ export function RelationAutocomplete({
                   >
                     <Check
                       className={cn(
-                        'mr-2 h-4 w-4',
+                        'me-2 h-4 w-4',
                         selectedValue === '' ? 'opacity-100' : 'opacity-0'
                       )}
                     />
@@ -220,7 +220,7 @@ export function RelationAutocomplete({
                     >
                       <Check
                         className={cn(
-                          'mr-2 h-4 w-4',
+                          'me-2 h-4 w-4',
                           selectedValue === optionId
                             ? 'opacity-100'
                             : 'opacity-0'

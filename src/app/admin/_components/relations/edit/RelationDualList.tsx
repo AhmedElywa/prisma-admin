@@ -186,7 +186,7 @@ export function RelationDualList({
     <div className="space-y-2">
       <Label>
         {label}
-        {required && <span className="ml-1 text-red-500">*</span>}
+        {required && <span className="ms-1 text-red-500">*</span>}
       </Label>
 
       <div className="grid grid-cols-[1fr,auto,1fr] gap-4">
@@ -200,9 +200,9 @@ export function RelationDualList({
           </div>
 
           <div className="relative">
-            <Search className="absolute top-2.5 left-2 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute start-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              className="h-9 pl-8"
+              className="h-9 ps-8"
               onChange={(e) => setAvailableSearch(e.target.value)}
               placeholder="Search..."
               value={availableSearch}
@@ -217,7 +217,7 @@ export function RelationDualList({
               return (
                 <button
                   className={cn(
-                    'w-full cursor-pointer px-3 py-2 text-left hover:bg-muted/50',
+                    'w-full cursor-pointer px-3 py-2 text-start hover:bg-muted/50',
                     isHighlighted && 'bg-muted'
                   )}
                   key={id}
@@ -241,7 +241,7 @@ export function RelationDualList({
             type="button"
             variant="outline"
           >
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-4 w-4 rtl:scale-x-[-1]" />
           </Button>
 
           <Button
@@ -252,7 +252,7 @@ export function RelationDualList({
             type="button"
             variant="outline"
           >
-            <ChevronsRight className="h-4 w-4" />
+            <ChevronsRight className="h-4 w-4 rtl:scale-x-[-1]" />
           </Button>
 
           <Button
@@ -263,7 +263,7 @@ export function RelationDualList({
             type="button"
             variant="outline"
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-4 w-4 rtl:scale-x-[-1]" />
           </Button>
 
           <Button
@@ -274,7 +274,7 @@ export function RelationDualList({
             type="button"
             variant="outline"
           >
-            <ChevronsLeft className="h-4 w-4" />
+            <ChevronsLeft className="h-4 w-4 rtl:scale-x-[-1]" />
           </Button>
         </div>
 
@@ -288,9 +288,9 @@ export function RelationDualList({
           </div>
 
           <div className="relative">
-            <Search className="absolute top-2.5 left-2 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute start-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              className="h-9 pl-8"
+              className="h-9 ps-8"
               onChange={(e) => setSelectedSearch(e.target.value)}
               placeholder="Search..."
               value={selectedSearch}
@@ -305,7 +305,7 @@ export function RelationDualList({
               return (
                 <button
                   className={cn(
-                    'w-full cursor-pointer px-3 py-2 text-left hover:bg-muted/50',
+                    'w-full cursor-pointer px-3 py-2 text-start hover:bg-muted/50',
                     isHighlighted && 'bg-muted'
                   )}
                   key={id}

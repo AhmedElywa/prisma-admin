@@ -43,7 +43,7 @@ export function EnumFilter({ config, value, onChange }: EnumFilterProps) {
       return (
         <div className="max-h-[200px] space-y-2 overflow-y-auto rounded-md border p-3">
           {config.enumValues.map((enumValue) => (
-            <div className="flex items-center space-x-2" key={enumValue}>
+            <div className="flex items-center gap-2" key={enumValue}>
               <Checkbox
                 checked={selectedValues.includes(enumValue)}
                 id={enumValue}

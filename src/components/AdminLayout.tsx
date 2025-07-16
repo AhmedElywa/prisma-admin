@@ -206,9 +206,9 @@ export function AdminLayout({ children, models }: AdminLayoutProps) {
 
             {/* Search */}
             <div className="relative hidden sm:block">
-              <Search className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 text-muted-foreground" />
+              <Search className="-translate-y-1/2 absolute start-3 top-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                className="w-64 pl-9"
+                className="w-64 ps-9"
                 placeholder="Search..."
                 type="text"
               />
@@ -218,7 +218,7 @@ export function AdminLayout({ children, models }: AdminLayoutProps) {
             <Button className="relative" size="icon" variant="ghost">
               <Bell className="h-5 w-5" />
               <Badge
-                className="-top-1 -right-1 absolute flex h-5 w-5 items-center justify-center p-0"
+                className="-top-1 -end-1 absolute flex h-5 w-5 items-center justify-center p-0"
                 variant="destructive"
               >
                 3
@@ -239,16 +239,16 @@ export function AdminLayout({ children, models }: AdminLayoutProps) {
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>
-                  <UserCircle className="mr-2 h-4 w-4" />
+                  <UserCircle className="me-2 h-4 w-4" />
                   <span>Profile</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <Settings className="mr-2 h-4 w-4" />
+                  <Settings className="me-2 h-4 w-4" />
                   <span>Settings</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="text-destructive">
-                  <LogOut className="mr-2 h-4 w-4" />
+                  <LogOut className="me-2 h-4 w-4 rtl:scale-x-[-1]" />
                   <span>Log out</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -366,7 +366,7 @@ function MobileNav({
             <div className="h-5 w-5" />
           )}
           {mounted && (
-            <span className="ml-3">
+            <span className="ms-3">
               {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
             </span>
           )}

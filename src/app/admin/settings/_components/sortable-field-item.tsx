@@ -34,7 +34,7 @@ export function SortableFieldItem({
   return (
     <div
       className={cn(
-        'group relative flex w-full cursor-pointer items-center gap-2 rounded-md border p-3 text-left transition-colors hover:bg-muted/50',
+        'group relative flex w-full cursor-pointer items-center gap-2 rounded-md border p-3 text-start transition-colors hover:bg-muted/50',
         isSelected && 'border-primary bg-muted',
         isDragging && 'opacity-50'
       )}
@@ -70,7 +70,7 @@ export function SortableFieldItem({
           {field.type}
           {field.list && '[]'}
           {field.relationField && (
-            <span className="ml-1">
+            <span className="ms-1">
               • {field.list ? 'one-to-many' : 'many-to-one'}
             </span>
           )}

@@ -144,7 +144,7 @@ export function FilterBuilder({ fields, modelName }: FilterBuilderProps) {
         <Filter className="h-4 w-4" />
         Filters
         {activeFilterCount > 0 && (
-          <span className="ml-1 rounded-full bg-primary px-2 py-0.5 text-primary-foreground text-xs">
+          <span className="ms-1 rounded-full bg-primary px-2 py-0.5 text-primary-foreground text-xs">
             {activeFilterCount}
           </span>
         )}
@@ -228,7 +228,7 @@ export function FilterBuilder({ fields, modelName }: FilterBuilderProps) {
           size="sm"
           variant="outline"
         >
-          <Plus className="mr-2 h-4 w-4" />
+          <Plus className="me-2 h-4 w-4 rtl:scale-x-[-1]" />
           Add Filter
         </Button>
 

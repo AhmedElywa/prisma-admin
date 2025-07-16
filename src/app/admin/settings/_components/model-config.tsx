@@ -61,7 +61,7 @@ export function ModelConfig({ model, onChange }: ModelConfigProps) {
             .filter((f) => !(f.relationField || f.list))
             .map((field) => (
               <label
-                className="flex cursor-pointer items-center space-x-2 rounded-md p-2 transition-colors hover:bg-muted/50"
+                className="flex cursor-pointer items-center gap-2 rounded-md p-2 transition-colors hover:bg-muted/50"
                 key={field.id}
               >
                 <Checkbox

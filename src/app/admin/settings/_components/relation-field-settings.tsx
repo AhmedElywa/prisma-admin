@@ -185,7 +185,7 @@ export function RelationFieldSettings({
                   return (
                     <div className="space-y-1" key={action}>
                       <label
-                        className={`flex items-center space-x-2 ${isValid ? '' : 'opacity-50'}`}
+                        className={`flex items-center gap-2 ${isValid ? '' : 'opacity-50'}`}
                       >
                         <Checkbox
                           checked={
@@ -209,7 +209,7 @@ export function RelationFieldSettings({
                         </span>
                       </label>
                       {helpText && (
-                        <p className="ml-6 text-muted-foreground text-xs">
+                        <p className="ms-6 text-muted-foreground text-xs">
                           {helpText}
                         </p>
                       )}
@@ -252,7 +252,7 @@ export function RelationFieldSettings({
           <div className="space-y-2">
             <Label>Edit Options</Label>
             <div className="space-y-2">
-              <label className="flex items-center space-x-2">
+              <label className="flex items-center gap-2">
                 <Checkbox
                   checked={field.relationEditOptions?.searchable !== false}
                   onCheckedChange={(checked) =>
@@ -266,7 +266,7 @@ export function RelationFieldSettings({
                 />
                 <span className="text-sm">Searchable</span>
               </label>
-              <label className="flex items-center space-x-2">
+              <label className="flex items-center gap-2">
                 <Checkbox
                   checked={field.relationEditOptions?.createable === true}
                   onCheckedChange={(checked) =>
@@ -342,7 +342,7 @@ export function RelationFieldSettings({
                   <Badge key={fieldName} variant="secondary">
                     {fieldName}
                     <button
-                      className="ml-1 hover:text-destructive"
+                      className="ms-1 hover:text-destructive"
                       onClick={() => removePreviewField(fieldName)}
                       type="button"
                     >

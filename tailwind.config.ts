@@ -15,6 +15,11 @@ const config: Config = {
         'gradient-conic':
           'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
       },
+      // Custom utilities for RTL support
+      screens: {
+        rtl: { raw: '[dir="rtl"] &' },
+        ltr: { raw: '[dir="ltr"] &' },
+      },
     },
   },
   plugins: [require('@tailwindcss/forms')],

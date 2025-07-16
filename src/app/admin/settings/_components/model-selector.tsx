@@ -43,10 +43,10 @@ export function ModelSelector({
           variant="outline"
         >
           <div className="flex items-center">
-            <Database className="mr-2 h-4 w-4" />
+            <Database className="me-2 h-4 w-4" />
             {selected ? selected.name : 'Select model...'}
           </div>
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          <ChevronsUpDown className="ms-2 h-4 w-4 shrink-0 opacity-50 rtl:scale-x-[-1]" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[280px] p-0">
@@ -67,7 +67,7 @@ export function ModelSelector({
                 >
                   <Check
                     className={cn(
-                      'mr-2 h-4 w-4',
+                      'me-2 h-4 w-4',
                       selectedModel === model.id ? 'opacity-100' : 'opacity-0'
                     )}
                   />

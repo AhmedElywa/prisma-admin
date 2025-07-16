@@ -85,15 +85,15 @@ export function RelationDropdown({
           className="h-auto p-1 font-normal hover:bg-muted"
           variant="ghost"
         >
-          <span className="mr-1">{displayValue}</span>
-          <ChevronDown className="h-3 w-3" />
+          <span className="me-1">{displayValue}</span>
+          <ChevronDown className="h-3 w-3 rtl:scale-x-[-1]" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-48">
         {shouldShowAction(field, 'filter') && field.relationFrom && (
           <>
             <DropdownMenuItem onClick={handleFilter}>
-              <Filter className="mr-2 h-4 w-4" />
+              <Filter className="me-2 h-4 w-4" />
               Filter by this {field.title}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
@@ -102,14 +102,14 @@ export function RelationDropdown({
 
         {shouldShowAction(field, 'view') && (
           <DropdownMenuItem onClick={handleView}>
-            <Eye className="mr-2 h-4 w-4" />
+            <Eye className="me-2 h-4 w-4" />
             View {field.title}
           </DropdownMenuItem>
         )}
 
         {shouldShowAction(field, 'edit') && (
           <DropdownMenuItem onClick={handleEdit}>
-            <Edit className="mr-2 h-4 w-4" />
+            <Edit className="me-2 h-4 w-4" />
             Edit {field.title}
           </DropdownMenuItem>
         )}
@@ -118,7 +118,7 @@ export function RelationDropdown({
           <>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleViewAll}>
-              <List className="mr-2 h-4 w-4" />
+              <List className="me-2 h-4 w-4" />
               View all {modelName}s
             </DropdownMenuItem>
           </>
